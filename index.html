@@ -298,10 +298,10 @@
     .hd-top { padding: 0.85rem 1rem 0.6rem; padding-top: calc(0.85rem + env(safe-area-inset-top)); }
     .hd-brand h1 { font-size: 1.1rem; }
     .desktop-only { display: none !important; }
-    .stats-row { display: flex; overflow-x: auto; gap: 0.5rem; padding: 0.25rem 1rem 0.75rem; scroll-snap-type: x proximity; scroll-padding-inline: 1rem; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-    .stats-row::after { content: ''; flex: 0 0 0.5rem; } /* breathing room after last stat */
-    .stats-row::-webkit-scrollbar { display: none; }
-    .stat { flex: 0 0 auto; min-width: 128px; scroll-snap-align: start; }
+    .stats-row { grid-template-columns: repeat(2,1fr); gap: 0.45rem; padding: 0.15rem 1rem 0.75rem; }
+    .stat { padding: 0.45rem 0.7rem; border-radius: 8px; min-width: 0; }
+    .stat-label { font-size: 0.56rem; letter-spacing: 0.06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat-val { font-size: 1rem; margin-top: 0.05rem; }
     .tab-bar { padding: 0 1rem; gap: 1.1rem; }
     .tab-note { display: none; }
     .tab-btn { padding: 0.75rem 0; font-size: 0.9rem; }
