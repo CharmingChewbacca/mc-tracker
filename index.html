@@ -304,6 +304,7 @@
     .stat-val { font-size: 1rem; margin-top: 0.05rem; }
     .tab-bar { padding: 0 1rem; gap: 1.1rem; }
     .tab-note { display: none; }
+    .tab-action .btn { display: none; } /* the floating button does this job on phone */
     .tab-btn { padding: 0.75rem 0; font-size: 0.9rem; }
     main { padding: 1rem 1rem calc(6rem + env(safe-area-inset-bottom)); }
     .card { padding: 0.95rem; }
@@ -328,7 +329,7 @@
     #modal-box { border-radius: 1rem 1rem 0 0; padding: 1.25rem 1.1rem calc(1.25rem + env(safe-area-inset-bottom)); max-height: 92vh; max-height: 92dvh; }
     #toast { left: 50%; right: auto; transform: translateX(-50%); bottom: calc(5.5rem + env(safe-area-inset-bottom)); white-space: nowrap; }
     .fab { display: inline-flex; align-items: center; gap: 0.4rem; position: fixed; right: 1rem; bottom: calc(1rem + env(safe-area-inset-bottom)); z-index: 50;
-      background: var(--blue); color: var(--white); border: none; border-radius: 99px; padding: 0.85rem 1.25rem; font-size: 0.95rem; font-weight: 800; font-family: inherit;
+      background: var(--blue); color: var(--white); border: none; border-radius: 0.45rem; padding: 0.85rem 1.25rem; font-size: 0.95rem; font-weight: 800; font-family: inherit;
       box-shadow: 0 8px 24px rgba(52,87,166,0.35); cursor: pointer; }
     .auth-card { padding: 1.5rem; }
   }
@@ -823,8 +824,16 @@ function renderApp() {
       </div>
     </header>
     <main>${state.tab==='home'?renderHome():state.tab==='outreach'?renderOutreach():renderHours()}</main>
-    ${state.clients.length>0 && !(state.tab==='hours'&&state.showAdd==='entry') ? `<button class="fab" data-action="quick-log">+ Log Hours</button>` : ''}`;
+    ${renderFab()}`;
   renderStatusDot();
+}
+
+function renderFab() {
+  if (state.showAdd) return '';   // a form is open — it has its own Save / Cancel
+  const f = state.tab==='home'     ? { a:'toggle-add-client',   l:'+ Add Client' }
+          : state.tab==='outreach' ? { a:'toggle-add-prospect', l:'+ Add Prospect' }
+          : state.clients.length   ? { a:'toggle-add-entry',    l:'+ Log Hours' } : null;
+  return f ? `<button class="fab" data-action="${f.a}">${f.l}</button>` : '';
 }
 
 function renderSampleCta() {
@@ -1561,6 +1570,9 @@ document.getElementById('import-input').addEventListener('change', e=>{
 document.addEventListener('keydown', e=>{
   if((e.metaKey||e.ctrlKey)&&e.key==='s'){ e.preventDefault(); saveData(); showToast('Saved!'); }
 });
+
+// Floating button: after it opens a form, bring the form into view.
+document.addEventListener('click', e=>{ if (e.target.closest('.fab')) setTimeout(()=>window.scrollTo({top:0, behavior:'smooth'}), 0); });
 
 document.addEventListener('submit', e=>{
   if (e.target.id!=='login-form') return;
