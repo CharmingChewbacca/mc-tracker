@@ -317,6 +317,8 @@
     .form-group input, .form-group select, .form-group textarea,
     .detail-add-form input, .detail-add-form select, .detail-add-form textarea,
     .contact-row input { font-size: 16px; padding: 0.6rem 0.7rem; } /* 16px stops iPhone auto-zoom */
+    input[type="date"], input[type="time"] { -webkit-appearance: none; appearance: none; display: block; width: 100%; max-width: 100%; min-width: 0; min-height: 2.75rem; box-sizing: border-box; text-align: left; }
+    input[type="date"]::-webkit-date-and-time-value, input[type="time"]::-webkit-date-and-time-value { text-align: left; }
     .btn-sm { font-size: 0.82rem; padding: 0.5rem 0.95rem; }
     .form-actions .btn { flex: 1; }
     .summary-grid { grid-template-columns: repeat(2,1fr); }
@@ -329,7 +331,7 @@
     #modal-box { border-radius: 1rem 1rem 0 0; padding: 1.25rem 1.1rem calc(1.25rem + env(safe-area-inset-bottom)); max-height: 92vh; max-height: 92dvh; }
     #toast { left: 50%; right: auto; transform: translateX(-50%); bottom: calc(5.5rem + env(safe-area-inset-bottom)); white-space: nowrap; }
     .fab { display: inline-flex; align-items: center; gap: 0.4rem; position: fixed; right: 1rem; bottom: calc(1rem + env(safe-area-inset-bottom)); z-index: 50;
-      background: var(--blue); color: var(--white); border: none; border-radius: 0.45rem; padding: 0.85rem 1.25rem; font-size: 0.95rem; font-weight: 800; font-family: inherit;
+      background: var(--blue); color: var(--white); border: none; border-radius: 0.7rem; padding: 0.85rem 1.25rem; font-size: 0.95rem; font-weight: 800; font-family: inherit;
       box-shadow: 0 8px 24px rgba(52,87,166,0.35); cursor: pointer; }
     .auth-card { padding: 1.5rem; }
   }
@@ -398,7 +400,7 @@ function migrateClientsAndProspects(rawClients) {
     if (stage==='pending' && !c.archived) {
       // Move unconverted leads into Outreach instead of the client list.
       prospectsFromMigration.push({
-        id:c.id, dateAdded:c.dateAdded||new Date().toISOString().slice(0,10),
+        id:c.id, dateAdded:c.dateAdded||today(),
         businessName:c.businessName, contactName:c.contactName, email:c.email,
         referralSource:c.referralSource, nextContactDate:'', notes:c.notes,
         contacts:c.contacts, archived:false, converted:false, activities:[],
@@ -595,7 +597,7 @@ async function signOut() {
 
 // ── SAMPLE DATA (for testing — all made up) ──────────────────────
 function loadSampleData() {
-  const d = n => { const x=new Date(); x.setDate(x.getDate()+n); return x.toISOString().slice(0,10); };
+  const d = n => { const x=new Date(); x.setDate(x.getDate()+n); return localDate(x); };
   const c1=uid(), c2=uid(), c3=uid();
   state.clients = [
     { id:c1, dateAdded:d(-30), archived:false, businessName:'Riverside Bakery', contactName:'Sam Example', email:'sam@example.com',
@@ -629,7 +631,7 @@ function loadSampleData() {
 // ── EXPORT / IMPORT ──────────────────────────────────────────────
 async function exportJSON() {
   const data = JSON.stringify({ clients: state.clients, hoursLog: state.hoursLog, prospects: state.prospects }, null, 2);
-  const filename = `morgan-creative-crm-${new Date().toISOString().slice(0,10)}.json`;
+  const filename = `morgan-creative-crm-${today()}.json`;
 
   try {
     // Use save file picker so user can overwrite existing backup file
@@ -696,7 +698,7 @@ function exportCSV() {
   ];
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([rows.map(r=>r.map(q).join(',')).join('\n')],{type:'text/csv'}));
-  a.download=`morgan-creative-crm-${new Date().toISOString().slice(0,10)}.csv`;
+  a.download=`morgan-creative-crm-${today()}.csv`;
   a.click(); showToast('CSV exported!');
 }
 
@@ -741,11 +743,15 @@ function copyAllLink(primaryEmail, contacts){
   if(emails.length<2) return '';
   return `<button type="button" class="card-email-all" data-action="copy-all-emails" data-emails="${esc(emails.join(', '))}">Copy All (${emails.length})</button>`;
 }
+// Dates use YOUR time zone (toISOString() is UTC, which is tomorrow after 7pm Eastern).
+function localDate(x){ x=x||new Date(); return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`; }
+function today(){ return localDate(); }
+function parseLocal(d){ const [y,m,dd]=String(d).split('-').map(Number); return new Date(y,(m||1)-1,dd||1); }
 function fmt(d){ if(!d)return''; const[y,m,dd]=d.split('-'); return `${m}/${dd}/${y}`; }
 function fmtTime(t){ if(!t)return''; const[h,m]=t.split(':'); const hr=parseInt(h); return `${hr%12||12}:${m} ${hr>=12?'PM':'AM'}`; }
 function nowTime(){ return new Date().toTimeString().slice(0,5); }
-function isOverdue(d){ return d&&new Date(d)<new Date(new Date().toDateString()); }
-function isDueSoon(d){ if(!d)return false; const diff=(new Date(d)-new Date(new Date().toDateString()))/(864e5); return diff>=0&&diff<=7; }
+function isOverdue(d){ return !!d && parseLocal(d) < parseLocal(today()); }
+function isDueSoon(d){ if(!d)return false; const diff=Math.round((parseLocal(d)-parseLocal(today()))/864e5); return diff>=0&&diff<=7; }
 function clientHours(id){ return state.hoursLog.filter(h=>h.clientId===id).reduce((s,h)=>s+Number(h.hours),0); }
 function clientLabel(c){ return c.contactName?c.businessName+' \u2014 '+c.contactName:c.businessName; }
 function isBillableWork(c){ return c.service!=='Volunteer Work' && c.service!=='Internal'; }
@@ -1107,10 +1113,10 @@ function renderHours() {
 
 function renderAddEntryPanel() {
   const clOpts=`<option value="">Select a client\u2026</option>`+state.clients.map(c=>`<option value="${c.id}">${esc(clientLabel(c))}</option>`).join('');
-  const today=new Date().toISOString().slice(0,10);
+  const todayStr=today();
   return `<div class="add-panel"><div class="form-grid">
     <div class="form-group"><label>Client</label><select id="ne-client">${clOpts}</select></div>
-    <div class="form-group"><label>Date</label><input id="ne-date" type="date" value="${today}"></div>
+    <div class="form-group"><label>Date</label><input id="ne-date" type="date" value="${todayStr}"></div>
     <div class="form-group"><label>Hours</label><input id="ne-hours" type="number" step="0.25" min="0" placeholder="e.g. 2.5"></div>
     <div class="form-group"><label>Note (Optional)</label><input id="ne-note" type="text" placeholder="What did you work on?"></div>
     <div class="form-group form-full"><label>Entry Type</label>
@@ -1205,7 +1211,7 @@ function autoLog(clientId, description, type='Note') {
     if (!state.clients[idx].activities) state.clients[idx].activities = [];
     state.clients[idx].activities.push({
       id: uid(), type, description,
-      date: now.toISOString().slice(0,10),
+      date: localDate(now),
       time: now.toTimeString().slice(0,5),
       auto: true,
     });
@@ -1256,7 +1262,7 @@ function openClientDetail(id) {
         <div class="detail-add-form">
           <div class="detail-form-row">
             <select id="na-type">${typeOpts}</select>
-            <input id="na-date" type="date" value="${new Date().toISOString().slice(0,10)}">
+            <input id="na-date" type="date" value="${today()}">
           </div>
           <div class="detail-form-row">
             <input id="na-time" type="time" value="${nowTime()}">
@@ -1303,7 +1309,7 @@ document.addEventListener('click', e=>{
       const biz=gv('nc-biz').trim();
       if(!biz){ showToast('Business name is required.'); break; }
       state.clients.push({
-        id:uid(), dateAdded:new Date().toISOString().slice(0,10), archived:false,
+        id:uid(), dateAdded:today(), archived:false,
         businessName:biz, contactName:gv('nc-contact').trim(), email:gv('nc-email'),
         service:gv('nc-service'), value:gv('nc-value'),
         notes:gv('nc-notes'), dueDate:gv('nc-due'), invoiceStatus:gv('nc-inv')||'not_invoiced',
@@ -1373,7 +1379,7 @@ document.addEventListener('click', e=>{
       const biz=gv('np-biz').trim();
       if(!biz){ showToast('Business name is required.'); break; }
       state.prospects.push({
-        id:uid(), dateAdded:new Date().toISOString().slice(0,10),
+        id:uid(), dateAdded:today(),
         businessName:biz, contactName:gv('np-contact').trim(), email:gv('np-email'),
         referralSource:gv('np-ref')==='—'?'':gv('np-ref'),
         nextContactDate:gv('np-next'),
@@ -1414,9 +1420,9 @@ document.addEventListener('click', e=>{
         const p=state.prospects[idx];
         const carriedActivities=(p.activities||[]).map(a=>({...a}));
         carriedActivities.push({ id:uid(), type:'Note', description:'Converted from Outreach',
-          date:new Date().toISOString().slice(0,10), time:nowTime(), auto:true });
+          date:today(), time:nowTime(), auto:true });
         const newClient={
-          id:uid(), dateAdded:new Date().toISOString().slice(0,10), archived:false,
+          id:uid(), dateAdded:today(), archived:false,
           businessName:p.businessName, contactName:p.contactName, email:p.email,
           service:'', value:'', notes:p.notes, dueDate:'', invoiceStatus:'not_invoiced',
           contractStatus:'not_sent', questionnaireStatus:'not_sent', referralSource:p.referralSource, needsFollowUp:false,
@@ -1435,7 +1441,7 @@ document.addEventListener('click', e=>{
       if(idx>-1){
         if(!state.prospects[idx].activities) state.prospects[idx].activities=[];
         state.prospects[idx].activities.push({ id:uid(), type:'Note', description:'Marked Closed Lost',
-          date:new Date().toISOString().slice(0,10), time:nowTime(), auto:true });
+          date:today(), time:nowTime(), auto:true });
         state.prospects[idx].archived=true; scheduleAutoSave(); renderApp(); showToast('Marked inactive.');
       }
       break;
@@ -1454,7 +1460,7 @@ document.addEventListener('click', e=>{
       if(!hours||hours<=0){ showToast('Please enter valid hours.'); break; }
       state.hoursLog.push({
         id:uid(), clientId, hours, entryType:gr('ne-type'),
-        date:gv('ne-date')||new Date().toISOString().slice(0,10), note:gv('ne-note'),
+        date:gv('ne-date')||today(), note:gv('ne-note'),
       });
       state.showAdd=null; scheduleAutoSave(); renderApp(); showToast('Hours logged.');
       break;
@@ -1518,7 +1524,7 @@ document.addEventListener('click', e=>{
       const idx=state.clients.findIndex(c=>c.id===clientId);
       if(idx>-1){
         if(!state.clients[idx].activities) state.clients[idx].activities=[];
-        state.clients[idx].activities.push({ id:uid(), type:gv('na-type')||'Note', date:gv('na-date')||new Date().toISOString().slice(0,10), time:gv('na-time')||nowTime(), description:desc });
+        state.clients[idx].activities.push({ id:uid(), type:gv('na-type')||'Note', date:gv('na-date')||today(), time:gv('na-time')||nowTime(), description:desc });
         scheduleAutoSave(); openClientDetail(clientId); renderApp();
       }
       break;
