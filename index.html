@@ -1072,7 +1072,7 @@ function renderHours() {
   </div>`;
 
   const sorted=[...state.hoursLog].sort((a,b)=>a.date<b.date?1:-1);
-  const summaryCards=state.clients.filter(c=>clientHours(c.id)>0).map(c=>{
+  const summaryCards=state.clients.filter(c=>clientHours(c.id)>0).sort((a,b)=>clientHours(b.id)-clientHours(a.id)).map(c=>{
     const hrs=clientHours(c.id), rate=c.value&&hrs>0?Number(c.value)/hrs:null;
     return `<div class="summary-card">
       <div class="summary-name">${esc(c.businessName)}</div>
