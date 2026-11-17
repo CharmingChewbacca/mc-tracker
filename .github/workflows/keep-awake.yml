@@ -1,0 +1,26 @@
+name: Keep database awake
+
+on:
+  schedule:
+    - cron: '17 14 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ping Supabase
+        run: |
+          node -e "
+            global.window = {};
+            eval(require('fs').readFileSync('config.js', 'utf8'));
+            const c = window.CRM_CONFIG || {};
+            if (!c.supabaseUrl || !c.supabaseAnonKey) { console.log('config.js not filled in yet - skipping.'); process.exit(0); }
+            fetch(c.supabaseUrl.replace(/\/$/, '') + '/rest/v1/rpc/keep_awake', {
+              method: 'POST',
+              headers: { apikey: c.supabaseAnonKey, 'Content-Type': 'application/json' },
+              body: '{}'
+            }).then(async r => { console.log(r.status, await r.text()); if (!r.ok) process.exit(1); })
+              .catch(e => { console.error(e); process.exit(1); });
+          "
