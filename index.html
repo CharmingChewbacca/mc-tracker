@@ -345,10 +345,14 @@
 <script>
 // ── CONSTANTS ────────────────────────────────────────────────────
 const SERVICES = ['Brand & Web Design','Brand Design','General Design','Internal','Volunteer Work','Web Design'];
+const DEPOSIT_SHARE = 0.5; // your deposit is 50% of the project price
 const INV = [
-  { id:'not_invoiced', label:'Not Invoiced', color:'#6B6B65', bg:'#F0EDE7' },
-  { id:'invoiced',     label:'Invoiced',     color:'#B07A1A', bg:'#FEF3D7' },
-  { id:'paid',         label:'Paid',         color:'#4A7A2A', bg:'#E6F2DC' },
+  // 50% deposit → 50% final. 'invoiced' keeps its old id so existing "Invoiced" clients become "Deposit Invoiced".
+  { id:'not_invoiced',   label:'Not Invoiced',     color:'#6B6B65', bg:'#F0EDE7', paidShare:0 },
+  { id:'invoiced',       label:'Deposit Invoiced', color:'#B07A1A', bg:'#FEF3D7', paidShare:0 },
+  { id:'deposit_paid',   label:'Deposit Paid',     color:'#3457A6', bg:'#EEF0F8', paidShare:DEPOSIT_SHARE },
+  { id:'final_invoiced', label:'Final Invoiced',   color:'#B07A1A', bg:'#FEF3D7', paidShare:DEPOSIT_SHARE },
+  { id:'paid',           label:'Paid in Full',     color:'#4A7A2A', bg:'#E6F2DC', paidShare:1 },
 ];
 const QUEST = [
   { id:'not_sent',  label:'Not Sent',  color:'#6B6B65', bg:'#F0EDE7' },
@@ -791,7 +795,7 @@ function renderApp() {
   const volunteerHrs = state.hoursLog.filter(h=>h.entryType==='volunteer').reduce((s,h)=>s+Number(h.hours),0);
   const internalHrs = state.hoursLog.filter(h=>h.entryType==='internal').reduce((s,h)=>s+Number(h.hours),0);
   const pipVal = activeClients.reduce((s,c)=>s+(Number(c.value)||0),0);
-  const paidTotal = state.clients.filter(c=>c.invoiceStatus==='paid').reduce((s,c)=>s+(Number(c.value)||0),0);
+  const paidTotal = state.clients.reduce((s,c)=>s+(Number(c.value)||0)*(getInv(c).paidShare||0),0);
 
   const tabAction = state.tab==='home'
     ? `${followUpClients.length?`<span class="tab-note">${followUpClients.length} need${followUpClients.length===1?'s':''} follow-up</span>`:''}<button class="btn btn-primary btn-sm" data-action="toggle-add-client" style="border-radius:0.45rem">${state.showAdd==='client'?'Cancel':'+ Add Client'}</button>`
