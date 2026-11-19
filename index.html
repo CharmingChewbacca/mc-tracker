@@ -291,6 +291,7 @@
 
   /* ── Quick "Log Hours" button (phone only) ── */
   .fab { display: none; }
+  .h-unit { display: none; }
 
   /* ── Phone layout ── */
   @media(max-width:700px) {
@@ -326,6 +327,22 @@
     .breakdown-card { padding: 0.6rem 0.7rem; }
     .breakdown-val { font-size: 0.95rem; }
     .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    /* Hours log: each entry becomes a compact row — no sideways scrolling */
+    .hours-table { min-width: 0; display: block; }
+    .hours-table thead { display: none; }
+    .hours-table tbody { display: block; }
+    .hours-table tr { display: grid; grid-template-columns: auto auto 1fr auto; grid-template-areas: "client client client hours" "date type . actions" "note note note note"; column-gap: 0.6rem; row-gap: 0.3rem; align-items: center; padding: 0.8rem 1rem; border-bottom: 1px solid var(--border); }
+    .hours-table tr:last-child { border-bottom: none; }
+    .hours-table td { display: block; padding: 0; border: none; }
+    .hours-table .h-client { grid-area: client; min-width: 0; }
+    .hours-table .h-contact { display: none !important; }
+    .hours-table .h-unit { display: inline; font-weight: 600; color: var(--mid); }
+    .hours-table .h-hours { grid-area: hours; font-weight: 700; text-align: right; white-space: nowrap; }
+    .hours-table .h-date { grid-area: date; font-size: 0.8rem; white-space: nowrap; }
+    .hours-table .h-type { grid-area: type; }
+    .hours-table .h-actions { grid-area: actions; justify-self: end; }
+    .hours-table .h-note { grid-area: note; font-size: 0.82rem; }
+    .hours-table .h-note:empty { display: none; }
     table { min-width: 560px; }
     #modal-overlay { align-items: flex-end; padding: 0; }
     #modal-box { border-radius: 1rem 1rem 0 0; padding: 1.25rem 1.1rem calc(1.25rem + env(safe-area-inset-bottom)); max-height: 92vh; max-height: 92dvh; }
@@ -1089,13 +1106,13 @@ function renderHours() {
     const cl=state.clients.find(c=>c.id===h.clientId);
     const et=getEntryType(h);
     return `<tr>
-      <td class="muted">${fmt(h.date)}</td>
-      <td><span style="font-weight:600">${esc(cl?cl.businessName:'Removed')}</span>
-        ${cl&&cl.contactName?`<span style="font-size:0.75rem;color:var(--mid);display:block">${esc(cl.contactName)}</span>`:''}</td>
-      <td>${Number(h.hours).toFixed(2)}</td>
-      <td><span class="type-pill ${et.id}">${et.label}</span></td>
-      <td class="muted">${esc(h.note||'')}</td>
-      <td><div class="row-actions">
+      <td class="muted h-date">${fmt(h.date)}</td>
+      <td class="h-client"><span style="font-weight:600">${esc(cl?cl.businessName:'Removed')}</span>
+        ${cl&&cl.contactName?`<span class="h-contact" style="font-size:0.75rem;color:var(--mid);display:block">${esc(cl.contactName)}</span>`:''}</td>
+      <td class="h-hours">${Number(h.hours).toFixed(2)}<span class="h-unit"> hrs</span></td>
+      <td class="h-type"><span class="type-pill ${et.id}">${et.label}</span></td>
+      <td class="muted h-note">${esc(h.note||'')}</td>
+      <td class="h-actions"><div class="row-actions">
         <button class="icon-btn" data-action="edit-entry" data-id="${h.id}">${ICON_PENCIL}</button>
         <button class="icon-btn del" data-action="del-entry" data-id="${h.id}">${ICON_CLOSE}</button>
       </div></td>
@@ -1109,7 +1126,7 @@ function renderHours() {
     ${addPanel}
     ${breakdown}
     ${summaryCards?`<div class="summary-grid">${summaryCards}</div>`:''}
-    ${rows?`<div class="table-wrap"><table>
+    ${rows?`<div class="table-wrap"><table class="hours-table">
       <thead><tr><th>Date</th><th>Client</th><th>Hours</th><th>Type</th><th>Note</th><th></th></tr></thead>
       <tbody>${rows}</tbody>
     </table></div>`:'<div class="empty-state">No hours logged yet.</div>'}`;
