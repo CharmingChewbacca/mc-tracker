@@ -271,6 +271,37 @@
     .hours-breakdown { grid-template-columns: 1fr; }
   }
 
+
+  /* ── Client Info ── */
+  .card-info-link { display: inline-block; background: none; border: none; padding: 0; margin-top: 0.45rem; font-family: inherit; font-size: 0.72rem; font-weight: 700; color: var(--blue); cursor: pointer; }
+  .card-info-link:hover { text-decoration: underline; }
+  .info-group { background: var(--bg); border: 1px solid var(--border); border-radius: 0.7rem; padding: 0.35rem 0.85rem 0.5rem; margin-bottom: 0.6rem; }
+  .info-group-title { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 0.45rem 0 0.2rem; }
+  .info-item { display: grid; grid-template-columns: 9.5rem 1fr auto; gap: 0.6rem; align-items: center; padding: 0.4rem 0; border-top: 1px solid var(--border); }
+  .info-group-title + .info-item, .info-account-name + .info-item { border-top: none; }
+  .info-label { font-size: 0.72rem; color: var(--mid); }
+  .info-value { font-size: 0.82rem; color: var(--dark); min-width: 0; overflow-wrap: anywhere; }
+  .info-value.multiline { white-space: pre-line; }
+  .info-value a { color: var(--blue); text-decoration: none; }
+  .info-value a:hover { text-decoration: underline; }
+  .info-copy { justify-self: end; }
+  .info-account { border-top: 1px solid var(--border); padding: 0.5rem 0 0.3rem; }
+  .info-group-title + .info-account { border-top: none; }
+  .info-account-name { font-size: 0.82rem; font-weight: 700; }
+  .info-pw-note { font-size: 0.7rem; color: var(--muted); padding-top: 0.2rem; }
+  .info-account-note { font-size: 0.75rem; color: var(--mid); font-style: italic; padding-top: 0.15rem; }
+  .info-empty { font-size: 0.78rem; color: var(--muted); padding: 0.25rem 0 0.5rem; }
+  .info-edit-title { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dark); margin: 1.2rem 0 0.6rem; padding-top: 0.9rem; border-top: 1px solid var(--border); }
+  #modal-box h2 + datalist + .info-edit-title { border-top: none; padding-top: 0; margin-top: 0.5rem; }
+  .info-edit-hint { font-size: 0.74rem; color: var(--mid); margin: -0.3rem 0 0.6rem; }
+  .info-edit-row { display: grid; gap: 0.45rem; align-items: center; margin-bottom: 0.5rem; }
+  .info-edit-row.social { grid-template-columns: 10rem 1fr auto; }
+  .info-edit-row.custom { grid-template-columns: 10rem 1fr auto; }
+  .info-edit-row.account { grid-template-columns: 1fr auto; background: var(--bg); border: 1px solid var(--border); border-radius: 0.65rem; padding: 0.6rem; }
+  .info-edit-row.account .ir-url, .info-edit-row.account .ir-user, .info-edit-row.account .ir-note { grid-column: 1 / -1; }
+  .info-edit-row input, .info-edit-row select { width: 100%; border: 1px solid var(--border); border-radius: 0.45rem; padding: 0.45rem 0.6rem; font-size: 0.82rem; background: var(--white); font-family: inherit; outline: none; }
+  .info-edit-row input:focus, .info-edit-row select:focus { border-color: var(--blue); }
+
   /* ── Sync status ── */
   .save-dot.saving { background: var(--gold); }
   .save-dot.error { background: var(--red); }
@@ -350,6 +381,12 @@
     .fab { display: inline-flex; align-items: center; gap: 0.4rem; position: fixed; right: 1rem; bottom: calc(1rem + env(safe-area-inset-bottom)); z-index: 50;
       background: var(--blue); color: var(--white); border: none; border-radius: 0.7rem; padding: 0.85rem 1.25rem; font-size: 0.95rem; font-weight: 800; font-family: inherit;
       box-shadow: 0 8px 24px rgba(52,87,166,0.35); cursor: pointer; }
+    .info-item { grid-template-columns: 1fr auto; row-gap: 0.1rem; }
+    .info-label { grid-column: 1; }
+    .info-value { grid-column: 1; }
+    .info-copy { grid-column: 2; grid-row: 1 / span 2; }
+    .info-edit-row.social, .info-edit-row.custom { grid-template-columns: 7.5rem 1fr auto; }
+    .info-edit-row input, .info-edit-row select { font-size: 16px; }
     .auth-card { padding: 1.5rem; }
   }
 </style>
@@ -394,6 +431,7 @@ const ENTRY_TYPES = [
 const ICON_FLAG   = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`;
 const ICON_PENCIL = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`;
 const ICON_RETURN = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>`;
+const ICON_COPY   = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
 const ICON_CLOSE  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 
 // ── STATE ────────────────────────────────────────────────────────
@@ -935,6 +973,7 @@ function renderCard(c, isArchived=false) {
     ${c.email?`<button type="button" class="card-email" data-action="copy-email" data-email="${esc(c.email)}">${esc(c.email)}</button>`:''}
     ${extraContactsHtml(c.contacts)}
     ${copyAllLink(c.email,c.contacts)}
+    <button type="button" class="card-info-link" data-action="open-detail" data-id="${c.id}">${hasInfo(c)?'Client Info':'+ Add Client Info'}</button>
     <div class="card-divider"></div>
     ${(c.service||(c.referralSource&&c.referralSource!=='—'))?`<div class="card-detail">${[c.service?esc(c.service):'',c.referralSource&&c.referralSource!=='—'?'Via '+esc(c.referralSource):''].filter(Boolean).join(' \u00b7 ')}</div>`:''}
     ${(c.value||hrs>0)?`<div class="card-detail card-detail-strong">${[c.value?currency(c.value):'',hrs>0?hrs.toFixed(1)+' hrs logged':''].filter(Boolean).join(' \u00b7 ')}</div>`:''}
@@ -1240,6 +1279,145 @@ function autoLog(clientId, description, type='Note') {
 }
 
 // ── CLIENT DETAIL MODAL ───────────────────────────────────────────
+// ── CLIENT INFO (contact, web, social, brand, logins, custom) ────
+// Passwords are deliberately NOT stored here — logins point to your password manager.
+const PASSWORD_HOME = '1Password';
+const INFO_SECTIONS = [
+  { title:'Contact & Business', fields:[
+    { k:'phone',         l:'Phone',                 t:'tel' },
+    { k:'businessEmail', l:'Business Email',        t:'email' },
+    { k:'website',       l:'Website',               t:'url' },
+    { k:'address',       l:'Mailing Address',       t:'textarea' } ] },
+  { title:'Web & Domain', fields:[
+    { k:'domain',        l:'Domain Name',           t:'text', ph:'example.com' },
+    { k:'registrar',     l:'Domain Registrar',      t:'text', ph:'e.g. GoDaddy, Squarespace Domains' },
+    { k:'hosting',       l:'Website Platform / Host', t:'text', ph:'e.g. Squarespace' },
+    { k:'renewalDate',   l:'Domain Renewal Date',   t:'date' } ] },
+  { title:'Brand', fields:[
+    { k:'tagline',       l:'Tagline',               t:'text' },
+    { k:'colors',        l:'Brand Colors',          t:'textarea', ph:'e.g. Navy #1F2A44, Sand #E8DCC8' },
+    { k:'fonts',         l:'Fonts',                 t:'text', ph:'e.g. Headings: Montserrat · Body: Lora' },
+    { k:'assetsLink',    l:'Brand Files Link',      t:'url', ph:'Link to logo files / brand guide' } ] },
+];
+const SOCIAL_PLATFORMS = ['Instagram','Facebook','LinkedIn','TikTok','X (Twitter)','YouTube','Pinterest','Threads','Google Business','Other'];
+const ACCOUNT_SUGGESTIONS = ['Squarespace','GoDaddy','Google Workspace','Google Business Profile','Canva','Instagram','Facebook','Mailchimp','Shopify','WordPress','Wix'];
+
+function getInfo(c){ const i=c.info||{}; return { ...i, socials:i.socials||[], accounts:i.accounts||[], custom:i.custom||[] }; }
+function hasInfo(c){
+  const i=getInfo(c);
+  return INFO_SECTIONS.some(s=>s.fields.some(f=>i[f.k])) || i.socials.length || i.accounts.length || i.custom.length;
+}
+function looksLikeUrl(v){ return /^https?:\/\//i.test(v) || /^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(v); }
+function hrefFor(v,type){
+  v=String(v).trim();
+  if(type==='email'||(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))) return 'mailto:'+v;
+  if(type==='tel') return 'tel:'+v.replace(/[^\d+]/g,'');
+  if(looksLikeUrl(v)) return /^https?:\/\//i.test(v)?v:'https://'+v;
+  return '';
+}
+function infoValueHtml(v,type){
+  const h=hrefFor(v,type);
+  const txt=type==='date'?fmt(v):esc(v);
+  return h?`<a href="${esc(h)}" target="_blank" rel="noopener">${txt}</a>`:`<span>${txt}</span>`;
+}
+function infoRow(label,value,type){
+  if(!value) return '';
+  const copyVal = type==='date'?fmt(value):value;
+  return `<div class="info-item">
+    <div class="info-label">${esc(label)}</div>
+    <div class="info-value${type==='textarea'?' multiline':''}">${infoValueHtml(value,type)}</div>
+    <button class="icon-btn info-copy" data-action="copy-text" data-text="${esc(copyVal)}" data-label="${esc(label)} copied" title="Copy">${ICON_COPY}</button>
+  </div>`;
+}
+function renderInfoView(c){
+  const i=getInfo(c);
+  const groups=[];
+  INFO_SECTIONS.forEach(sec=>{
+    const rows=sec.fields.map(f=>infoRow(f.l,i[f.k],f.t)).join('');
+    if(rows) groups.push(`<div class="info-group"><div class="info-group-title">${sec.title}</div>${rows}</div>`);
+  });
+  if(i.socials.length) groups.push(`<div class="info-group"><div class="info-group-title">Social Media</div>${i.socials.map(s=>infoRow(s.platform||'Social',s.value,'text')).join('')}</div>`);
+  if(i.accounts.length) groups.push(`<div class="info-group"><div class="info-group-title">Accounts &amp; Logins</div>${i.accounts.map(a=>`
+    <div class="info-account">
+      <div class="info-account-name">${esc(a.platform||'Account')}</div>
+      ${infoRow('Login URL',a.url,'url')}
+      ${infoRow('Username / Email',a.username,'text')}
+      <div class="info-pw-note">Password saved in ${PASSWORD_HOME}</div>
+      ${a.note?`<div class="info-account-note">${esc(a.note)}</div>`:''}
+    </div>`).join('')}</div>`);
+  if(i.custom.length) groups.push(`<div class="info-group"><div class="info-group-title">Other</div>${i.custom.map(x=>infoRow(x.label||'Note',x.value,'text')).join('')}</div>`);
+  return groups.length?groups.join(''):`<p class="info-empty">No client info yet. Add their contact details, domain, socials, brand details and logins so everything is in one place.</p>`;
+}
+function infoAsText(c){
+  const i=getInfo(c), out=[`${c.businessName} — Client Info`];
+  const line=(l,v)=>{ if(v) out.push(`${l}: ${v}`); };
+  INFO_SECTIONS.forEach(sec=>{
+    const vals=sec.fields.filter(f=>i[f.k]);
+    if(vals.length){ out.push('',sec.title.toUpperCase()); vals.forEach(f=>line(f.l, f.t==='date'?fmt(i[f.k]):i[f.k])); }
+  });
+  if(i.socials.length){ out.push('','SOCIAL MEDIA'); i.socials.forEach(s=>line(s.platform||'Social',s.value)); }
+  if(i.accounts.length){ out.push('','ACCOUNTS & LOGINS'); i.accounts.forEach(a=>{ out.push(`${a.platform||'Account'}${a.username?' — '+a.username:''}${a.url?' ('+a.url+')':''}${a.note?' · '+a.note:''}`); }); }
+  if(i.custom.length){ out.push('','OTHER'); i.custom.forEach(x=>line(x.label||'Note',x.value)); }
+  return out.join('\n');
+}
+
+function socialRowHtml(s){ s=s||{};
+  const opts=SOCIAL_PLATFORMS.map(p=>`<option${s.platform===p?' selected':''}>${p}</option>`).join('');
+  return `<div class="info-edit-row social"><select class="ir-platform">${opts}</select><input class="ir-value" type="text" placeholder="@handle or profile URL" value="${esc(s.value)}"><button type="button" class="icon-btn del" data-action="remove-info-row" title="Remove">${ICON_CLOSE}</button></div>`;
+}
+function accountRowHtml(a){ a=a||{};
+  return `<div class="info-edit-row account">
+    <input class="ir-platform" type="text" list="acct-suggest" placeholder="Platform (e.g. Squarespace)" value="${esc(a.platform)}">
+    <button type="button" class="icon-btn del" data-action="remove-info-row" title="Remove">${ICON_CLOSE}</button>
+    <input class="ir-url" type="text" placeholder="Login URL" value="${esc(a.url)}">
+    <input class="ir-user" type="text" placeholder="Username or login email" value="${esc(a.username)}">
+    <input class="ir-note" type="text" placeholder="Note (e.g. client owns account, 2FA on their phone)" value="${esc(a.note)}">
+  </div>`;
+}
+function customRowHtml(x){ x=x||{};
+  return `<div class="info-edit-row custom"><input class="ir-label" type="text" placeholder="Label" value="${esc(x.label)}"><input class="ir-value" type="text" placeholder="Value" value="${esc(x.value)}"><button type="button" class="icon-btn del" data-action="remove-info-row" title="Remove">${ICON_CLOSE}</button></div>`;
+}
+
+function openEditClientInfo(id){
+  const c=state.clients.find(x=>x.id===id); if(!c) return;
+  const i=getInfo(c);
+  const field=f=>{
+    const v=esc(i[f.k]||''), ph=f.ph?` placeholder="${esc(f.ph)}"`:'';
+    const input=f.t==='textarea'?`<textarea id="ci-${f.k}" rows="2"${ph}>${v}</textarea>`:`<input id="ci-${f.k}" type="${f.t==='url'?'text':f.t}"${f.t==='url'?' inputmode="url" autocapitalize="off"':''}${f.t==='email'?' autocapitalize="off"':''} value="${v}"${ph}>`;
+    return `<div class="form-group${f.t==='textarea'?' form-full':''}"><label>${f.l}</label>${input}</div>`;
+  };
+  openModal(`<h2>Client Info — ${esc(c.businessName)}</h2>
+    <datalist id="acct-suggest">${ACCOUNT_SUGGESTIONS.map(a=>`<option value="${a}">`).join('')}</datalist>
+    ${INFO_SECTIONS.map(sec=>`<div class="info-edit-title">${sec.title}</div><div class="form-grid">${sec.fields.map(field).join('')}</div>`).join('')}
+    <div class="info-edit-title">Social Media</div>
+    <div id="ci-socials">${i.socials.map(socialRowHtml).join('')}</div>
+    <button type="button" class="btn btn-ghost btn-sm" data-action="add-info-row" data-kind="social" style="border-radius:0.45rem">+ Add Social</button>
+    <div class="info-edit-title">Accounts &amp; Logins</div>
+    <p class="info-edit-hint">Keep passwords in ${PASSWORD_HOME} — this just records which accounts exist and how to get in.</p>
+    <div id="ci-accounts">${i.accounts.map(accountRowHtml).join('')}</div>
+    <button type="button" class="btn btn-ghost btn-sm" data-action="add-info-row" data-kind="account" style="border-radius:0.45rem">+ Add Account</button>
+    <div class="info-edit-title">Other</div>
+    <div id="ci-custom">${i.custom.map(customRowHtml).join('')}</div>
+    <button type="button" class="btn btn-ghost btn-sm" data-action="add-info-row" data-kind="custom" style="border-radius:0.45rem">+ Add Field</button>
+    <div class="form-actions" style="margin-top:1.25rem">
+      <button class="btn btn-primary btn-sm" data-action="save-client-info" data-id="${id}">Save Info</button>
+      <button class="btn btn-ghost btn-sm" data-action="open-detail" data-id="${id}">Cancel</button>
+    </div>`);
+}
+
+function saveClientInfo(id){
+  const c=state.clients.find(x=>x.id===id); if(!c) return;
+  const info={};
+  INFO_SECTIONS.forEach(sec=>sec.fields.forEach(f=>{ const v=gv('ci-'+f.k).trim(); if(v) info[f.k]=v; }));
+  const rows=(sel)=>[...document.querySelectorAll(sel)];
+  const val=(r,c)=>((r.querySelector(c)||{}).value||'').trim();
+  info.socials=rows('#ci-socials .info-edit-row').map(r=>({platform:val(r,'.ir-platform'),value:val(r,'.ir-value')})).filter(x=>x.value);
+  info.accounts=rows('#ci-accounts .info-edit-row').map(r=>({platform:val(r,'.ir-platform'),url:val(r,'.ir-url'),username:val(r,'.ir-user'),note:val(r,'.ir-note')})).filter(x=>x.platform||x.url||x.username);
+  info.custom=rows('#ci-custom .info-edit-row').map(r=>({label:val(r,'.ir-label'),value:val(r,'.ir-value')})).filter(x=>x.label||x.value);
+  c.info=info;
+  scheduleAutoSave(); renderApp(); openClientDetail(id); showToast('Client info saved');
+}
+
 function openClientDetail(id) {
   state.detailClientId = id;
   const c = state.clients.find(x=>x.id===id);
@@ -1272,7 +1450,16 @@ function openClientDetail(id) {
       <button class="btn btn-ghost btn-sm" data-action="close-modal">Close</button>
     </div>
 
-
+    <div class="detail-section">
+      <div class="detail-section-head">
+        <span class="detail-section-title">Client Info</span>
+        <span style="display:flex;gap:0.4rem">
+          ${hasInfo(c)?`<button class="btn btn-ghost btn-sm" data-action="copy-client-info" data-id="${id}">Copy All</button>`:''}
+          <button class="btn btn-ghost btn-sm" data-action="edit-client-info" data-id="${id}">${hasInfo(c)?'Edit':'+ Add Info'}</button>
+        </span>
+      </div>
+      ${renderInfoView(c)}
+    </div>
 
     <div class="detail-section">
       <div class="detail-section-head">
@@ -1502,6 +1689,16 @@ document.addEventListener('click', e=>{
       }
       break;
     case 'open-detail': openClientDetail(id); break;
+    case 'edit-client-info': openEditClientInfo(id); break;
+    case 'save-client-info': saveClientInfo(id); break;
+    case 'copy-client-info': { const c=state.clients.find(x=>x.id===id); if(c) copyToClipboard(infoAsText(c),'Client info copied'); break; }
+    case 'copy-text': copyToClipboard(el.dataset.text, el.dataset.label||'Copied'); break;
+    case 'add-info-row': {
+      const k=el.dataset.kind, box=g(k==='social'?'ci-socials':k==='account'?'ci-accounts':'ci-custom');
+      if(box){ box.insertAdjacentHTML('beforeend', k==='social'?socialRowHtml():k==='account'?accountRowHtml():customRowHtml()); const f=box.lastElementChild.querySelector('input'); if(f) f.focus(); }
+      break;
+    }
+    case 'remove-info-row': { const r=el.closest('.info-edit-row'); if(r) r.remove(); break; }
 
     case 'toggle-add-task': {
       const f=g('add-task-form'); if(f) f.style.display=f.style.display==='none'?'block':'none'; break;
