@@ -1415,6 +1415,7 @@ function infoAsText(c){
 }
 
 // ── Edit form rows ──
+const NOFILL = 'autocomplete="off" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other"'; // tells 1Password / browsers not to autofill or offer to save here
 const RM = `<button type="button" class="icon-btn del" data-action="remove-info-row" title="Remove">${ICON_CLOSE}</button>`;
 function socialRowHtml(x){ x=x||{};
   const opts=SOCIAL_PLATFORMS.map(p=>`<option${x.platform===p?' selected':''}>${p}</option>`).join('');
@@ -1436,11 +1437,11 @@ function fontRowHtml(f){ f=f||{};
 }
 function accountRowHtml(a){ a=a||{};
   return `<div class="info-edit-row account">
-    <input class="ir-platform" type="text" list="acct-suggest" placeholder="Platform (e.g. Squarespace)" value="${esc(a.platform)}">${RM}
-    <input class="ir-url" type="text" inputmode="url" autocapitalize="off" placeholder="Login URL" value="${esc(a.url)}">
-    <input class="ir-user" type="text" autocapitalize="off" placeholder="Username or login email" value="${esc(a.username)}">
-    <div class="pw-edit"><input class="ir-pass" type="password" autocomplete="new-password" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" placeholder="Password" value="${esc(a.password)}"><button type="button" class="icon-btn" data-action="toggle-pw-input" title="Show / hide">${ICON_EYE}</button></div>
-    <input class="ir-note" type="text" placeholder="Note (e.g. client owns account, 2FA on their phone)" value="${esc(a.note)}">
+    <input class="ir-platform" type="text" ${NOFILL} list="acct-suggest" placeholder="Platform (e.g. Squarespace)" value="${esc(a.platform)}">${RM}
+    <input class="ir-url" type="text" ${NOFILL} inputmode="url" autocapitalize="off" placeholder="Login URL" value="${esc(a.url)}">
+    <input class="ir-user" type="text" ${NOFILL} autocapitalize="off" placeholder="Username or login email" value="${esc(a.username)}">
+    <div class="pw-edit"><input class="ir-pass" type="password" autocomplete="new-password" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other" placeholder="Password" value="${esc(a.password)}"><button type="button" class="icon-btn" data-action="toggle-pw-input" title="Show / hide">${ICON_EYE}</button></div>
+    <input class="ir-note" type="text" ${NOFILL} placeholder="Note (e.g. client owns account, 2FA on their phone)" value="${esc(a.note)}">
   </div>`;
 }
 function customRowHtml(x){ x=x||{};
@@ -1466,7 +1467,7 @@ function openEditClientInfo(id){
   const field=f=>{
     const v=esc(i[f.k]||''), ph=f.ph?` placeholder="${esc(f.ph)}"`:'';
     const extra=(f.t==='url'||f.t==='email')?' autocapitalize="off"':'';
-    const input=f.t==='textarea'?`<textarea id="ci-${f.k}" rows="2"${ph}>${v}</textarea>`:`<input id="ci-${f.k}" type="${f.t==='url'?'text':f.t}"${extra} value="${v}"${ph}>`;
+    const input=f.t==='textarea'?`<textarea id="ci-${f.k}" rows="2"${ph}>${v}</textarea>`:`<input id="ci-${f.k}" type="${f.t==='url'?'text':f.t}" ${NOFILL}${extra} value="${v}"${ph}>`;
     return `<div class="form-group${f.t==='textarea'?' form-full':''}"><label>${f.l}</label>${input}</div>`;
   };
   openModal(`<h2>Client Info — ${esc(c.businessName)}</h2>
