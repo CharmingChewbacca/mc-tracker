@@ -304,6 +304,9 @@
   .swatch { display: inline-block; width: 1.1rem; height: 1.1rem; border-radius: 0.3rem; border: 1px solid rgba(0,0,0,0.12); flex-shrink: 0; vertical-align: middle; }
   .edit-swatch { width: 1.9rem; height: 1.9rem; border-radius: 0.45rem; background: repeating-linear-gradient(45deg,#f0ede7 0 4px,#fff 4px 8px); }
   .color-val { display: flex; align-items: center; gap: 0.5rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
+  .pw-edit { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; gap: 0.45rem; align-items: center; }
+  .pw-val { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.05em; }
+  .pw-btns { display: flex; gap: 0.15rem; justify-self: end; }
   .info-sub { font-size: 0.72rem; color: var(--mid); margin-top: 0.1rem; }
   .info-list-label { display: block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--mid); margin: 0.9rem 0 0.3rem; }
   .info-add-btn { border-radius: 0.45rem; }
@@ -393,7 +396,7 @@
     .info-item { grid-template-columns: 1fr auto; row-gap: 0.1rem; }
     .info-label { grid-column: 1; }
     .info-value { grid-column: 1; }
-    .info-copy { grid-column: 2; grid-row: 1 / span 2; }
+    .info-copy, .pw-btns { grid-column: 2; grid-row: 1 / span 2; }
     .info-edit-row.pair { grid-template-columns: 7.5rem 1fr auto; }
     .info-edit-row.color { grid-template-columns: auto 1fr 6.5rem auto; }
     .info-edit-row input, .info-edit-row select { font-size: 16px; }
@@ -442,6 +445,7 @@ const ICON_FLAG   = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none"
 const ICON_PENCIL = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`;
 const ICON_RETURN = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>`;
 const ICON_COPY   = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+const ICON_EYE    = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
 const ICON_CLOSE  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 
 // ── STATE ────────────────────────────────────────────────────────
@@ -1383,7 +1387,11 @@ function renderInfoView(c){
       <div class="info-account-name">${esc(a.platform||'Account')}</div>
       ${infoRow('Login URL',a.url,'url')}
       ${infoRow('Username / Email',a.username,'text')}
-      <div class="info-pw-note">Password saved in ${PASSWORD_HOME}</div>
+      ${a.password?`<div class="info-item">
+        <div class="info-label">Password</div>
+        <div class="info-value pw-val" data-pw="${esc(a.password)}">••••••••</div>
+        <span class="pw-btns"><button class="icon-btn" data-action="toggle-pw" title="Show / hide">${ICON_EYE}</button>${copyBtn(a.password,'Password')}</span>
+      </div>`:(a.url||a.username?`<div class="info-pw-note">Password saved in ${PASSWORD_HOME}</div>`:'')}
       ${a.note?`<div class="info-account-note">${esc(a.note)}</div>`:''}
     </div>`).join(''));
 
@@ -1431,6 +1439,7 @@ function accountRowHtml(a){ a=a||{};
     <input class="ir-platform" type="text" list="acct-suggest" placeholder="Platform (e.g. Squarespace)" value="${esc(a.platform)}">${RM}
     <input class="ir-url" type="text" inputmode="url" autocapitalize="off" placeholder="Login URL" value="${esc(a.url)}">
     <input class="ir-user" type="text" autocapitalize="off" placeholder="Username or login email" value="${esc(a.username)}">
+    <div class="pw-edit"><input class="ir-pass" type="password" autocomplete="new-password" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" placeholder="Password" value="${esc(a.password)}"><button type="button" class="icon-btn" data-action="toggle-pw-input" title="Show / hide">${ICON_EYE}</button></div>
     <input class="ir-note" type="text" placeholder="Note (e.g. client owns account, 2FA on their phone)" value="${esc(a.note)}">
   </div>`;
 }
@@ -1475,7 +1484,7 @@ function openEditClientInfo(id){
     <div class="info-edit-title">Social Media</div>
     ${listBlock('social', i.socials)}
     <div class="info-edit-title">Accounts &amp; Logins</div>
-    <p class="info-edit-hint">Keep passwords in ${PASSWORD_HOME} — this just records which accounts exist and how to get in.</p>
+    <p class="info-edit-hint">Passwords stay hidden until you tap the eye, and are left out of Copy All.</p>
     ${listBlock('account', i.accounts)}
     <div class="info-edit-title">Other</div>
     ${listBlock('custom', i.custom)}
@@ -1495,7 +1504,7 @@ function saveClientInfo(id){
   info.colors  =rows('ci-colors').map(r=>({name:val(r,'.ir-a'),hex:normHex(val(r,'.ir-hex'))})).filter(x=>x.name||x.hex);
   info.fonts   =rows('ci-fonts').map(r=>({use:val(r,'.ir-a'),name:val(r,'.ir-b')})).filter(x=>x.name);
   info.socials =rows('ci-socials').map(r=>({platform:val(r,'.ir-a'),value:val(r,'.ir-b')})).filter(x=>x.value);
-  info.accounts=rows('ci-accounts').map(r=>({platform:val(r,'.ir-platform'),url:val(r,'.ir-url'),username:val(r,'.ir-user'),note:val(r,'.ir-note')})).filter(x=>x.platform||x.url||x.username);
+  info.accounts=rows('ci-accounts').map(r=>({platform:val(r,'.ir-platform'),url:val(r,'.ir-url'),username:val(r,'.ir-user'),password:((r.querySelector('.ir-pass')||{}).value||''),note:val(r,'.ir-note')})).filter(x=>x.platform||x.url||x.username||x.password);
   info.custom  =rows('ci-custom').map(r=>({label:val(r,'.ir-a'),value:val(r,'.ir-b')})).filter(x=>x.label||x.value);
   c.info=info;
   scheduleAutoSave(); renderApp(); openClientDetail(id); showToast('Client info saved');
@@ -1786,6 +1795,15 @@ document.addEventListener('click', e=>{
     case 'add-info-row': {
       const L=INFO_LISTS[el.dataset.kind], box=L&&g(L.box);
       if(box){ box.insertAdjacentHTML('beforeend', L.row()); const f=box.lastElementChild.querySelector('input'); if(f) f.focus(); }
+      break;
+    }
+    case 'toggle-pw': {
+      const v=el.closest('.info-item').querySelector('.pw-val');
+      if(v){ const shown=v.classList.toggle('shown'); v.textContent=shown?v.dataset.pw:'\u2022'.repeat(8); }
+      break;
+    }
+    case 'toggle-pw-input': {
+      const inp=el.parentElement.querySelector('.ir-pass'); if(inp) inp.type=inp.type==='password'?'text':'password';
       break;
     }
     case 'remove-info-row': { const r=el.closest('.info-edit-row'); if(r) r.remove(); break; }
