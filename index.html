@@ -292,13 +292,22 @@
   .info-account-note { font-size: 0.75rem; color: var(--mid); font-style: italic; padding-top: 0.15rem; }
   .info-empty { font-size: 0.78rem; color: var(--muted); padding: 0.25rem 0 0.5rem; }
   .info-edit-title { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dark); margin: 1.2rem 0 0.6rem; padding-top: 0.9rem; border-top: 1px solid var(--border); }
-  #modal-box h2 + datalist + .info-edit-title { border-top: none; padding-top: 0; margin-top: 0.5rem; }
   .info-edit-hint { font-size: 0.74rem; color: var(--mid); margin: -0.3rem 0 0.6rem; }
   .info-edit-row { display: grid; gap: 0.45rem; align-items: center; margin-bottom: 0.5rem; }
-  .info-edit-row.social { grid-template-columns: 10rem 1fr auto; }
-  .info-edit-row.custom { grid-template-columns: 10rem 1fr auto; }
-  .info-edit-row.account { grid-template-columns: 1fr auto; background: var(--bg); border: 1px solid var(--border); border-radius: 0.65rem; padding: 0.6rem; }
+  .info-edit-row.pair { grid-template-columns: 10rem 1fr auto; }
+  .info-edit-row.color { grid-template-columns: auto 1fr 7.5rem auto; }
+  .info-edit-row.account, .info-edit-row.card3 { grid-template-columns: 1fr auto; background: var(--bg); border: 1px solid var(--border); border-radius: 0.65rem; padding: 0.6rem; }
   .info-edit-row.account .ir-url, .info-edit-row.account .ir-user, .info-edit-row.account .ir-note { grid-column: 1 / -1; }
+  .info-edit-row.card3 { grid-template-columns: 1fr 1fr auto; }
+  .info-edit-row.card3 .ir-domain { grid-column: 1 / 3; }
+  .info-edit-row.card3 .ir-renew { grid-column: 2 / 4; }
+  .swatch { display: inline-block; width: 1.1rem; height: 1.1rem; border-radius: 0.3rem; border: 1px solid rgba(0,0,0,0.12); flex-shrink: 0; vertical-align: middle; }
+  .edit-swatch { width: 1.9rem; height: 1.9rem; border-radius: 0.45rem; background: repeating-linear-gradient(45deg,#f0ede7 0 4px,#fff 4px 8px); }
+  .color-val { display: flex; align-items: center; gap: 0.5rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
+  .info-sub { font-size: 0.72rem; color: var(--mid); margin-top: 0.1rem; }
+  .info-list-label { display: block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--mid); margin: 0.9rem 0 0.3rem; }
+  .info-add-btn { border-radius: 0.45rem; }
+  .info-edit-title.first { border-top: none; padding-top: 0; margin-top: 0.5rem; }
   .info-edit-row input, .info-edit-row select { width: 100%; border: 1px solid var(--border); border-radius: 0.45rem; padding: 0.45rem 0.6rem; font-size: 0.82rem; background: var(--white); font-family: inherit; outline: none; }
   .info-edit-row input:focus, .info-edit-row select:focus { border-color: var(--blue); }
 
@@ -385,7 +394,8 @@
     .info-label { grid-column: 1; }
     .info-value { grid-column: 1; }
     .info-copy { grid-column: 2; grid-row: 1 / span 2; }
-    .info-edit-row.social, .info-edit-row.custom { grid-template-columns: 7.5rem 1fr auto; }
+    .info-edit-row.pair { grid-template-columns: 7.5rem 1fr auto; }
+    .info-edit-row.color { grid-template-columns: auto 1fr 6.5rem auto; }
     .info-edit-row input, .info-edit-row select { font-size: 16px; }
     .auth-card { padding: 1.5rem; }
   }
@@ -1282,31 +1292,42 @@ function autoLog(clientId, description, type='Note') {
 // ── CLIENT INFO (contact, web, social, brand, logins, custom) ────
 // Passwords are deliberately NOT stored here — logins point to your password manager.
 const PASSWORD_HOME = '1Password';
-const INFO_SECTIONS = [
-  { title:'Contact & Business', fields:[
-    { k:'phone',         l:'Phone',                 t:'tel' },
-    { k:'businessEmail', l:'Business Email',        t:'email' },
-    { k:'website',       l:'Website',               t:'url' },
-    { k:'address',       l:'Mailing Address',       t:'textarea' } ] },
-  { title:'Web & Domain', fields:[
-    { k:'domain',        l:'Domain Name',           t:'text', ph:'example.com' },
-    { k:'registrar',     l:'Domain Registrar',      t:'text', ph:'e.g. GoDaddy, Squarespace Domains' },
-    { k:'hosting',       l:'Website Platform / Host', t:'text', ph:'e.g. Squarespace' },
-    { k:'renewalDate',   l:'Domain Renewal Date',   t:'date' } ] },
-  { title:'Brand', fields:[
-    { k:'tagline',       l:'Tagline',               t:'text' },
-    { k:'colors',        l:'Brand Colors',          t:'textarea', ph:'e.g. Navy #1F2A44, Sand #E8DCC8' },
-    { k:'fonts',         l:'Fonts',                 t:'text', ph:'e.g. Headings: Montserrat · Body: Lora' },
-    { k:'assetsLink',    l:'Brand Files Link',      t:'url', ph:'Link to logo files / brand guide' } ] },
-];
+// Single fields per section (lists like domains, colors, fonts are handled separately below)
+const INFO_FIELDS = {
+  contact: [
+    { k:'businessEmail', l:'Business Email',  t:'email' },
+    { k:'phone',         l:'Phone',           t:'tel' },
+    { k:'address',       l:'Mailing Address', t:'textarea' } ],
+  web: [
+    { k:'hosting',       l:'Website Platform / Host', t:'text', ph:'e.g. Squarespace' } ],
+  brand: [
+    { k:'assetsLink',    l:'Brand Files Link', t:'url', ph:'Link to logo files / brand guide' } ],
+};
+const ALL_INFO_FIELDS = [...INFO_FIELDS.contact, ...INFO_FIELDS.web, ...INFO_FIELDS.brand];
 const SOCIAL_PLATFORMS = ['Instagram','Facebook','LinkedIn','TikTok','X (Twitter)','YouTube','Pinterest','Threads','Google Business','Other'];
 const ACCOUNT_SUGGESTIONS = ['Squarespace','GoDaddy','Google Workspace','Google Business Profile','Canva','Instagram','Facebook','Mailchimp','Shopify','WordPress','Wix'];
+const FONT_USES = ['Headings','Body','Accent','Logo'];
 
-function getInfo(c){ const i=c.info||{}; return { ...i, socials:i.socials||[], accounts:i.accounts||[], custom:i.custom||[] }; }
+// Reads a client's info, upgrading anything saved in the earlier single-field format.
+function getInfo(c){
+  const i={ ...(c.info||{}) };
+  let domains=i.domains||[], colors=i.colors, fonts=i.fonts, custom=i.custom||[];
+  if(!i.domains){
+    const names=[...new Set([i.domain,i.website].filter(Boolean).map(v=>String(v).replace(/^https?:\/\//i,'').replace(/^www\./i,'').replace(/\/.*$/,'')))];
+    domains=names.map((d,n)=>({ domain:d, registrar:n===0?(i.registrar||''):'', renewalDate:n===0?(i.renewalDate||''):'' }));
+    if(!names.length && (i.registrar||i.renewalDate)) domains=[{domain:'',registrar:i.registrar||'',renewalDate:i.renewalDate||''}];
+  }
+  if(typeof colors==='string') colors=colors.split(/[,\n]+/).map(x=>x.trim()).filter(Boolean).map(x=>{ const m=x.match(/#?[0-9a-f]{6}\b|#[0-9a-f]{3}\b/i); return { name:(m?x.replace(m[0],''):x).replace(/[:\-–]\s*$/,'').trim(), hex:m?normHex(m[0]):'' }; });
+  if(typeof fonts==='string') fonts=fonts.trim()?[{use:'',name:fonts}]:[];
+  if(i.tagline && !custom.some(x=>x.label==='Tagline')) custom=[{label:'Tagline',value:i.tagline},...custom];
+  return { ...i, domains, colors:colors||[], fonts:fonts||[], socials:i.socials||[], accounts:i.accounts||[], custom };
+}
 function hasInfo(c){
   const i=getInfo(c);
-  return INFO_SECTIONS.some(s=>s.fields.some(f=>i[f.k])) || i.socials.length || i.accounts.length || i.custom.length;
+  return ALL_INFO_FIELDS.some(f=>i[f.k]) || i.domains.length || i.colors.length || i.fonts.length || i.socials.length || i.accounts.length || i.custom.length;
 }
+function normHex(v){ v=String(v||'').trim(); if(!v) return ''; if(!v.startsWith('#')) v='#'+v; return v.toUpperCase(); }
+function validHex(v){ return /^#([0-9A-F]{3}|[0-9A-F]{6})$/i.test(v); }
 function looksLikeUrl(v){ return /^https?:\/\//i.test(v) || /^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(v); }
 function hrefFor(v,type){
   v=String(v).trim();
@@ -1320,62 +1341,114 @@ function infoValueHtml(v,type){
   const txt=type==='date'?fmt(v):esc(v);
   return h?`<a href="${esc(h)}" target="_blank" rel="noopener">${txt}</a>`:`<span>${txt}</span>`;
 }
-function infoRow(label,value,type){
+function copyBtn(text,label){ return `<button class="icon-btn info-copy" data-action="copy-text" data-text="${esc(text)}" data-label="${esc(label)} copied" title="Copy">${ICON_COPY}</button>`; }
+function infoRow(label,value,type,sub){
   if(!value) return '';
-  const copyVal = type==='date'?fmt(value):value;
   return `<div class="info-item">
     <div class="info-label">${esc(label)}</div>
-    <div class="info-value${type==='textarea'?' multiline':''}">${infoValueHtml(value,type)}</div>
-    <button class="icon-btn info-copy" data-action="copy-text" data-text="${esc(copyVal)}" data-label="${esc(label)} copied" title="Copy">${ICON_COPY}</button>
+    <div class="info-value${type==='textarea'?' multiline':''}">${infoValueHtml(value,type)}${sub?`<div class="info-sub">${sub}</div>`:''}</div>
+    ${copyBtn(type==='date'?fmt(value):value,label)}
   </div>`;
 }
 function renderInfoView(c){
-  const i=getInfo(c);
-  const groups=[];
-  INFO_SECTIONS.forEach(sec=>{
-    const rows=sec.fields.map(f=>infoRow(f.l,i[f.k],f.t)).join('');
-    if(rows) groups.push(`<div class="info-group"><div class="info-group-title">${sec.title}</div>${rows}</div>`);
-  });
-  if(i.socials.length) groups.push(`<div class="info-group"><div class="info-group-title">Social Media</div>${i.socials.map(s=>infoRow(s.platform||'Social',s.value,'text')).join('')}</div>`);
-  if(i.accounts.length) groups.push(`<div class="info-group"><div class="info-group-title">Accounts &amp; Logins</div>${i.accounts.map(a=>`
+  const i=getInfo(c), groups=[];
+  const group=(title,body)=>{ if(body) groups.push(`<div class="info-group"><div class="info-group-title">${title}</div>${body}</div>`); };
+
+  group('Contact &amp; Business', INFO_FIELDS.contact.map(f=>infoRow(f.l,i[f.k],f.t)).join(''));
+
+  group('Web &amp; Domain',
+    INFO_FIELDS.web.map(f=>infoRow(f.l,i[f.k],f.t)).join('') +
+    i.domains.map((d,n)=>{
+      const sub=[d.registrar?esc(d.registrar):'', d.renewalDate?'Renews '+fmt(d.renewalDate):''].filter(Boolean).join(' · ');
+      return d.domain ? infoRow(i.domains.length>1?`Domain ${n+1}`:'Domain', d.domain, 'url', sub)
+                      : (sub?`<div class="info-item"><div class="info-label">Domain</div><div class="info-value"><div class="info-sub">${sub}</div></div><span></span></div>`:'');
+    }).join(''));
+
+  group('Brand',
+    i.colors.map(col=>{
+      const hex=normHex(col.hex), sw=validHex(hex)?`<span class="swatch" style="background:${hex}"></span>`:'';
+      return `<div class="info-item">
+        <div class="info-label">${esc(col.name||'Color')}</div>
+        <div class="info-value color-val">${sw}<span>${esc(hex||'—')}</span></div>
+        ${hex?copyBtn(hex,(col.name||'Hex')):'<span></span>'}
+      </div>`;
+    }).join('') +
+    i.fonts.map(f=>infoRow(f.use||'Font', f.name, 'text')).join('') +
+    INFO_FIELDS.brand.map(f=>infoRow(f.l,i[f.k],f.t)).join(''));
+
+  group('Social Media', i.socials.map(x=>infoRow(x.platform||'Social',x.value,'text')).join(''));
+
+  group('Accounts &amp; Logins', i.accounts.map(a=>`
     <div class="info-account">
       <div class="info-account-name">${esc(a.platform||'Account')}</div>
       ${infoRow('Login URL',a.url,'url')}
       ${infoRow('Username / Email',a.username,'text')}
       <div class="info-pw-note">Password saved in ${PASSWORD_HOME}</div>
       ${a.note?`<div class="info-account-note">${esc(a.note)}</div>`:''}
-    </div>`).join('')}</div>`);
-  if(i.custom.length) groups.push(`<div class="info-group"><div class="info-group-title">Other</div>${i.custom.map(x=>infoRow(x.label||'Note',x.value,'text')).join('')}</div>`);
-  return groups.length?groups.join(''):`<p class="info-empty">No client info yet. Add their contact details, domain, socials, brand details and logins so everything is in one place.</p>`;
+    </div>`).join(''));
+
+  group('Other', i.custom.map(x=>infoRow(x.label||'Note',x.value,'text')).join(''));
+
+  return groups.length?groups.join(''):`<p class="info-empty">No client info yet. Add their contact details, domains, brand colors and fonts, socials and logins so everything is in one place.</p>`;
 }
 function infoAsText(c){
   const i=getInfo(c), out=[`${c.businessName} — Client Info`];
-  const line=(l,v)=>{ if(v) out.push(`${l}: ${v}`); };
-  INFO_SECTIONS.forEach(sec=>{
-    const vals=sec.fields.filter(f=>i[f.k]);
-    if(vals.length){ out.push('',sec.title.toUpperCase()); vals.forEach(f=>line(f.l, f.t==='date'?fmt(i[f.k]):i[f.k])); }
-  });
-  if(i.socials.length){ out.push('','SOCIAL MEDIA'); i.socials.forEach(s=>line(s.platform||'Social',s.value)); }
-  if(i.accounts.length){ out.push('','ACCOUNTS & LOGINS'); i.accounts.forEach(a=>{ out.push(`${a.platform||'Account'}${a.username?' — '+a.username:''}${a.url?' ('+a.url+')':''}${a.note?' · '+a.note:''}`); }); }
-  if(i.custom.length){ out.push('','OTHER'); i.custom.forEach(x=>line(x.label||'Note',x.value)); }
+  const sec=(title,lines)=>{ lines=lines.filter(Boolean); if(lines.length){ out.push('',title); out.push(...lines); } };
+  const kv=(l,v)=>v?`${l}: ${v}`:'';
+  sec('CONTACT & BUSINESS', INFO_FIELDS.contact.map(f=>kv(f.l,i[f.k])));
+  sec('WEB & DOMAIN', [ ...INFO_FIELDS.web.map(f=>kv(f.l,i[f.k])),
+    ...i.domains.map(d=>d.domain||d.registrar?`Domain: ${d.domain||'—'}${d.registrar?' · '+d.registrar:''}${d.renewalDate?' · renews '+fmt(d.renewalDate):''}`:'') ]);
+  sec('BRAND', [ ...i.colors.map(col=>`${col.name||'Color'}: ${normHex(col.hex)||'—'}`),
+    ...i.fonts.map(f=>kv(f.use||'Font',f.name)), ...INFO_FIELDS.brand.map(f=>kv(f.l,i[f.k])) ]);
+  sec('SOCIAL MEDIA', i.socials.map(x=>kv(x.platform||'Social',x.value)));
+  sec('ACCOUNTS & LOGINS', i.accounts.map(a=>`${a.platform||'Account'}${a.username?' — '+a.username:''}${a.url?' ('+a.url+')':''}${a.note?' · '+a.note:''}`));
+  sec('OTHER', i.custom.map(x=>kv(x.label||'Note',x.value)));
   return out.join('\n');
 }
 
-function socialRowHtml(s){ s=s||{};
-  const opts=SOCIAL_PLATFORMS.map(p=>`<option${s.platform===p?' selected':''}>${p}</option>`).join('');
-  return `<div class="info-edit-row social"><select class="ir-platform">${opts}</select><input class="ir-value" type="text" placeholder="@handle or profile URL" value="${esc(s.value)}"><button type="button" class="icon-btn del" data-action="remove-info-row" title="Remove">${ICON_CLOSE}</button></div>`;
+// ── Edit form rows ──
+const RM = `<button type="button" class="icon-btn del" data-action="remove-info-row" title="Remove">${ICON_CLOSE}</button>`;
+function socialRowHtml(x){ x=x||{};
+  const opts=SOCIAL_PLATFORMS.map(p=>`<option${x.platform===p?' selected':''}>${p}</option>`).join('');
+  return `<div class="info-edit-row pair"><select class="ir-a">${opts}</select><input class="ir-b" type="text" autocapitalize="off" placeholder="@handle or profile URL" value="${esc(x.value)}">${RM}</div>`;
+}
+function domainRowHtml(d){ d=d||{};
+  return `<div class="info-edit-row card3">
+    <input class="ir-domain" type="text" inputmode="url" autocapitalize="off" placeholder="Domain (e.g. example.com)" value="${esc(d.domain)}">${RM}
+    <input class="ir-registrar" type="text" placeholder="Registrar (e.g. GoDaddy)" value="${esc(d.registrar)}">
+    <input class="ir-renew" type="date" title="Renewal date" value="${esc(d.renewalDate)}">
+  </div>`;
+}
+function colorRowHtml(col){ col=col||{};
+  const hex=normHex(col.hex);
+  return `<div class="info-edit-row color"><span class="swatch edit-swatch" style="${validHex(hex)?'background:'+hex:''}"></span><input class="ir-a" type="text" placeholder="Name (e.g. Navy)" value="${esc(col.name)}"><input class="ir-hex" type="text" autocapitalize="characters" placeholder="#1F2A44" value="${esc(hex)}">${RM}</div>`;
+}
+function fontRowHtml(f){ f=f||{};
+  return `<div class="info-edit-row pair"><input class="ir-a" type="text" list="font-uses" placeholder="Use (e.g. Headings)" value="${esc(f.use)}"><input class="ir-b" type="text" placeholder="Font name" value="${esc(f.name)}">${RM}</div>`;
 }
 function accountRowHtml(a){ a=a||{};
   return `<div class="info-edit-row account">
-    <input class="ir-platform" type="text" list="acct-suggest" placeholder="Platform (e.g. Squarespace)" value="${esc(a.platform)}">
-    <button type="button" class="icon-btn del" data-action="remove-info-row" title="Remove">${ICON_CLOSE}</button>
-    <input class="ir-url" type="text" placeholder="Login URL" value="${esc(a.url)}">
-    <input class="ir-user" type="text" placeholder="Username or login email" value="${esc(a.username)}">
+    <input class="ir-platform" type="text" list="acct-suggest" placeholder="Platform (e.g. Squarespace)" value="${esc(a.platform)}">${RM}
+    <input class="ir-url" type="text" inputmode="url" autocapitalize="off" placeholder="Login URL" value="${esc(a.url)}">
+    <input class="ir-user" type="text" autocapitalize="off" placeholder="Username or login email" value="${esc(a.username)}">
     <input class="ir-note" type="text" placeholder="Note (e.g. client owns account, 2FA on their phone)" value="${esc(a.note)}">
   </div>`;
 }
 function customRowHtml(x){ x=x||{};
-  return `<div class="info-edit-row custom"><input class="ir-label" type="text" placeholder="Label" value="${esc(x.label)}"><input class="ir-value" type="text" placeholder="Value" value="${esc(x.value)}"><button type="button" class="icon-btn del" data-action="remove-info-row" title="Remove">${ICON_CLOSE}</button></div>`;
+  return `<div class="info-edit-row pair"><input class="ir-a" type="text" placeholder="Label" value="${esc(x.label)}"><input class="ir-b" type="text" placeholder="Value" value="${esc(x.value)}">${RM}</div>`;
+}
+const INFO_LISTS = {
+  domain:  { box:'ci-domains',  row:domainRowHtml,  btn:'+ Add Domain' },
+  color:   { box:'ci-colors',   row:colorRowHtml,   btn:'+ Add Color' },
+  font:    { box:'ci-fonts',    row:fontRowHtml,    btn:'+ Add Font' },
+  social:  { box:'ci-socials',  row:socialRowHtml,  btn:'+ Add Social' },
+  account: { box:'ci-accounts', row:accountRowHtml, btn:'+ Add Account' },
+  custom:  { box:'ci-custom',   row:customRowHtml,  btn:'+ Add Field' },
+};
+function listBlock(kind,items,label){
+  const L=INFO_LISTS[kind];
+  return `${label?`<label class="info-list-label">${label}</label>`:''}<div id="${L.box}">${items.map(L.row).join('')}</div>
+    <button type="button" class="btn btn-ghost btn-sm info-add-btn" data-action="add-info-row" data-kind="${kind}">${L.btn}</button>`;
 }
 
 function openEditClientInfo(id){
@@ -1383,22 +1456,29 @@ function openEditClientInfo(id){
   const i=getInfo(c);
   const field=f=>{
     const v=esc(i[f.k]||''), ph=f.ph?` placeholder="${esc(f.ph)}"`:'';
-    const input=f.t==='textarea'?`<textarea id="ci-${f.k}" rows="2"${ph}>${v}</textarea>`:`<input id="ci-${f.k}" type="${f.t==='url'?'text':f.t}"${f.t==='url'?' inputmode="url" autocapitalize="off"':''}${f.t==='email'?' autocapitalize="off"':''} value="${v}"${ph}>`;
+    const extra=(f.t==='url'||f.t==='email')?' autocapitalize="off"':'';
+    const input=f.t==='textarea'?`<textarea id="ci-${f.k}" rows="2"${ph}>${v}</textarea>`:`<input id="ci-${f.k}" type="${f.t==='url'?'text':f.t}"${extra} value="${v}"${ph}>`;
     return `<div class="form-group${f.t==='textarea'?' form-full':''}"><label>${f.l}</label>${input}</div>`;
   };
   openModal(`<h2>Client Info — ${esc(c.businessName)}</h2>
     <datalist id="acct-suggest">${ACCOUNT_SUGGESTIONS.map(a=>`<option value="${a}">`).join('')}</datalist>
-    ${INFO_SECTIONS.map(sec=>`<div class="info-edit-title">${sec.title}</div><div class="form-grid">${sec.fields.map(field).join('')}</div>`).join('')}
+    <datalist id="font-uses">${FONT_USES.map(a=>`<option value="${a}">`).join('')}</datalist>
+    <div class="info-edit-title first">Contact &amp; Business</div>
+    <div class="form-grid">${INFO_FIELDS.contact.map(field).join('')}</div>
+    <div class="info-edit-title">Web &amp; Domain</div>
+    <div class="form-grid">${INFO_FIELDS.web.map(field).join('')}</div>
+    ${listBlock('domain', i.domains.length?i.domains:[{}], 'Domains')}
+    <div class="info-edit-title">Brand</div>
+    ${listBlock('color', i.colors, 'Colors')}
+    ${listBlock('font', i.fonts, 'Fonts')}
+    <div class="form-grid" style="margin-top:0.9rem">${INFO_FIELDS.brand.map(field).join('')}</div>
     <div class="info-edit-title">Social Media</div>
-    <div id="ci-socials">${i.socials.map(socialRowHtml).join('')}</div>
-    <button type="button" class="btn btn-ghost btn-sm" data-action="add-info-row" data-kind="social" style="border-radius:0.45rem">+ Add Social</button>
+    ${listBlock('social', i.socials)}
     <div class="info-edit-title">Accounts &amp; Logins</div>
     <p class="info-edit-hint">Keep passwords in ${PASSWORD_HOME} — this just records which accounts exist and how to get in.</p>
-    <div id="ci-accounts">${i.accounts.map(accountRowHtml).join('')}</div>
-    <button type="button" class="btn btn-ghost btn-sm" data-action="add-info-row" data-kind="account" style="border-radius:0.45rem">+ Add Account</button>
+    ${listBlock('account', i.accounts)}
     <div class="info-edit-title">Other</div>
-    <div id="ci-custom">${i.custom.map(customRowHtml).join('')}</div>
-    <button type="button" class="btn btn-ghost btn-sm" data-action="add-info-row" data-kind="custom" style="border-radius:0.45rem">+ Add Field</button>
+    ${listBlock('custom', i.custom)}
     <div class="form-actions" style="margin-top:1.25rem">
       <button class="btn btn-primary btn-sm" data-action="save-client-info" data-id="${id}">Save Info</button>
       <button class="btn btn-ghost btn-sm" data-action="open-detail" data-id="${id}">Cancel</button>
@@ -1408,15 +1488,25 @@ function openEditClientInfo(id){
 function saveClientInfo(id){
   const c=state.clients.find(x=>x.id===id); if(!c) return;
   const info={};
-  INFO_SECTIONS.forEach(sec=>sec.fields.forEach(f=>{ const v=gv('ci-'+f.k).trim(); if(v) info[f.k]=v; }));
-  const rows=(sel)=>[...document.querySelectorAll(sel)];
-  const val=(r,c)=>((r.querySelector(c)||{}).value||'').trim();
-  info.socials=rows('#ci-socials .info-edit-row').map(r=>({platform:val(r,'.ir-platform'),value:val(r,'.ir-value')})).filter(x=>x.value);
-  info.accounts=rows('#ci-accounts .info-edit-row').map(r=>({platform:val(r,'.ir-platform'),url:val(r,'.ir-url'),username:val(r,'.ir-user'),note:val(r,'.ir-note')})).filter(x=>x.platform||x.url||x.username);
-  info.custom=rows('#ci-custom .info-edit-row').map(r=>({label:val(r,'.ir-label'),value:val(r,'.ir-value')})).filter(x=>x.label||x.value);
+  ALL_INFO_FIELDS.forEach(f=>{ const v=gv('ci-'+f.k).trim(); if(v) info[f.k]=v; });
+  const rows=box=>[...document.querySelectorAll('#'+box+' .info-edit-row')];
+  const val=(r,cls)=>((r.querySelector(cls)||{}).value||'').trim();
+  info.domains =rows('ci-domains').map(r=>({domain:val(r,'.ir-domain').replace(/^https?:\/\//i,'').replace(/\/$/,''),registrar:val(r,'.ir-registrar'),renewalDate:val(r,'.ir-renew')})).filter(d=>d.domain||d.registrar||d.renewalDate);
+  info.colors  =rows('ci-colors').map(r=>({name:val(r,'.ir-a'),hex:normHex(val(r,'.ir-hex'))})).filter(x=>x.name||x.hex);
+  info.fonts   =rows('ci-fonts').map(r=>({use:val(r,'.ir-a'),name:val(r,'.ir-b')})).filter(x=>x.name);
+  info.socials =rows('ci-socials').map(r=>({platform:val(r,'.ir-a'),value:val(r,'.ir-b')})).filter(x=>x.value);
+  info.accounts=rows('ci-accounts').map(r=>({platform:val(r,'.ir-platform'),url:val(r,'.ir-url'),username:val(r,'.ir-user'),note:val(r,'.ir-note')})).filter(x=>x.platform||x.url||x.username);
+  info.custom  =rows('ci-custom').map(r=>({label:val(r,'.ir-a'),value:val(r,'.ir-b')})).filter(x=>x.label||x.value);
   c.info=info;
   scheduleAutoSave(); renderApp(); openClientDetail(id); showToast('Client info saved');
 }
+
+// Live colour swatch while typing a hex code
+document.addEventListener('input', e=>{
+  if(!e.target.classList.contains('ir-hex')) return;
+  const hex=normHex(e.target.value), sw=e.target.parentElement.querySelector('.edit-swatch');
+  if(sw) sw.style.background=validHex(hex)?hex:'';
+});
 
 function openClientDetail(id) {
   state.detailClientId = id;
@@ -1694,8 +1784,8 @@ document.addEventListener('click', e=>{
     case 'copy-client-info': { const c=state.clients.find(x=>x.id===id); if(c) copyToClipboard(infoAsText(c),'Client info copied'); break; }
     case 'copy-text': copyToClipboard(el.dataset.text, el.dataset.label||'Copied'); break;
     case 'add-info-row': {
-      const k=el.dataset.kind, box=g(k==='social'?'ci-socials':k==='account'?'ci-accounts':'ci-custom');
-      if(box){ box.insertAdjacentHTML('beforeend', k==='social'?socialRowHtml():k==='account'?accountRowHtml():customRowHtml()); const f=box.lastElementChild.querySelector('input'); if(f) f.focus(); }
+      const L=INFO_LISTS[el.dataset.kind], box=L&&g(L.box);
+      if(box){ box.insertAdjacentHTML('beforeend', L.row()); const f=box.lastElementChild.querySelector('input'); if(f) f.focus(); }
       break;
     }
     case 'remove-info-row': { const r=el.closest('.info-edit-row'); if(r) r.remove(); break; }
