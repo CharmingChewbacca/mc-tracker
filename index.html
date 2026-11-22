@@ -402,6 +402,44 @@
     .info-edit-row input, .info-edit-row select { font-size: 16px; }
     .auth-card { padding: 1.5rem; }
   }
+
+  /* ── Design refresh: type + colour ───────────────────────────── */
+  @font-face { font-family: 'Nunito Sans'; font-style: normal; font-weight: 200 1000; font-display: swap; src: url('fonts/nunito-sans-latin-wght-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'Nunito Sans'; font-style: italic; font-weight: 200 1000; font-display: swap; src: url('fonts/nunito-sans-latin-wght-italic.woff2') format('woff2'); }
+  :root {
+    --dark:   #1B1D22;
+    --mid:    #5C6068;
+    --muted:  #7D8188;
+    --border: #E6E6E1;
+    --bg:     #F6F6F3;
+    --warm:   #F1F1EE;
+    --green:  #2E7D4F;
+    --shadow: 0 1px 2px rgba(20,20,10,0.05);
+  }
+  body, button, input, select, textarea { font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+  .card, .stage-section, .archive-section, .summary-card, .table-wrap, .info-group { box-shadow: var(--shadow); }
+  .card.needs-followup { border-color: #EBC57A; }
+
+  /* Stats: white boxes, colour only on the number */
+  .stat, .stat.tint-green, .stat.tint-gold, .stat.tint-red, .stat.tint-blue { background: var(--white); border: 1px solid var(--border); box-shadow: var(--shadow); }
+  .stat.tint-green .stat-label, .stat.tint-gold .stat-label, .stat.tint-red .stat-label, .stat.tint-blue .stat-label { color: var(--mid); }
+  .stat-label { color: var(--mid); }
+  .stat.tint-total { background: #2F3237; border-color: #2F3237; }
+  .stat.tint-total .stat-label { color: #C9CBCF; }
+
+  /* Hours tab breakdown: same treatment */
+  .breakdown-card.billable, .breakdown-card.volunteer, .breakdown-card.internal { background: var(--white); border: 1px solid var(--border); box-shadow: var(--shadow); }
+
+  /* Payment progress bar on client cards */
+  .pay-wrap { margin-top: 0.6rem; }
+  .pay-bar { display: flex; gap: 4px; }
+  .pay-seg { flex: 1; height: 8px; border-radius: 99px; background: #E6E6E1; }
+  .pay-seg.on { background: #3FA06A; }
+  .pay-seg.done { background: #2E8B57; }
+  .pay-line { display: flex; justify-content: space-between; gap: 0.5rem; margin-top: 0.35rem; font-size: 0.68rem; color: var(--mid); }
+  .pay-line strong { color: var(--dark); font-weight: 800; }
+  .pay-none { margin-top: 0.6rem; }
+  .contract-badge.first { margin-left: 0; }
 </style>
 </head>
 <body>
@@ -957,6 +995,23 @@ function renderHome() {
     ${archiveSection}`;
 }
 
+// Payment progress: 4 steps (deposit invoiced → deposit paid → final invoiced → paid in full)
+const PAY_STEP = { not_invoiced:0, invoiced:1, deposit_paid:2, final_invoiced:3, paid:4 };
+function payBarHtml(c){
+  if(!isBillableWork(c)){
+    const kind = c.service==='Internal' ? 'Internal' : 'Volunteer';
+    return `<div class="pay-line pay-none"><strong>${kind}</strong><span>No invoice</span></div>`;
+  }
+  const inv=getInv(c), step=PAY_STEP[inv.id]??0, val=Number(c.value)||0;
+  const got=val*(inv.paidShare||0);
+  const segs=[0,1,2,3].map(i=>`<span class="pay-seg${i<step?(step===4?' done':' on'):''}"></span>`).join('');
+  const sub = val ? `${currency(got)} of ${currency(val)}` : 'No project value set';
+  return `<div class="pay-wrap" title="${esc(inv.label)}">
+    <div class="pay-bar" role="img" aria-label="Payment: ${esc(inv.label)}, step ${step} of 4">${segs}</div>
+    <div class="pay-line"><strong>${esc(inv.label)}</strong><span>${sub}</span></div>
+  </div>`;
+}
+
 function renderCard(c, isArchived=false) {
   const inv=getInv(c), con=getContract(c), qst=getQuest(c);
   const hrs=clientHours(c.id);
@@ -993,9 +1048,9 @@ function renderCard(c, isArchived=false) {
     ${(c.value||hrs>0)?`<div class="card-detail card-detail-strong">${[c.value?currency(c.value):'',hrs>0?hrs.toFixed(1)+' hrs logged':''].filter(Boolean).join(' \u00b7 ')}</div>`:''}
     ${c.dueDate?`<div class="card-detail ${dueClass}">${duePrefix}${fmt(c.dueDate)}</div>`:''}
     <div class="card-note${c.notes?'':' empty'}" data-action="edit-client-notes" data-id="${c.id}" title="Click to ${c.notes?'edit':'add a'} note">${c.notes?esc(c.notes):'Add a note\u2026'}</div>
+    ${payBarHtml(c)}
     ${(isBillableWk||showFollowUp)?`<div class="badge-row">
-      ${isBillableWk?`<span class="inv-badge" style="color:${inv.color};background:${inv.bg}">${inv.label}</span>
-      <span class="contract-badge" style="color:${con.color};background:${con.bg}">${con.label}</span>
+      ${isBillableWk?`<span class="contract-badge first" style="color:${con.color};background:${con.bg}">${con.label}</span>
       ${!isArchived?`<span class="contract-badge" title="Questionnaire: ${qst.label}" style="color:${qst.color};background:${qst.bg}">Questionnaire</span>`:''}`:''}
       ${showFollowUp?`<span class="followup-badge">Needs Follow-Up</span>`:''}
     </div>`:''}
