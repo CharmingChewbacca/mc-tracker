@@ -420,10 +420,17 @@
   .card, .stage-section, .archive-section, .summary-card, .table-wrap, .info-group { box-shadow: var(--shadow); }
   .card.needs-followup { border-color: #EBC57A; }
 
-  /* Stats: white boxes, colour only on the number */
-  .stat, .stat.tint-green, .stat.tint-gold, .stat.tint-red, .stat.tint-blue { background: var(--white); border: 1px solid var(--border); box-shadow: var(--shadow); }
-  .stat.tint-green .stat-label, .stat.tint-gold .stat-label, .stat.tint-red .stat-label, .stat.tint-blue .stat-label { color: var(--mid); }
+  /* Stats: money, clients and outreach keep their colour tints; hours boxes are white */
+  .stat { background: var(--white); border: 1px solid var(--border); box-shadow: var(--shadow); }
   .stat-label { color: var(--mid); }
+  .stat.tint-green { background: var(--green-lt); border-color: #C0D9B0; box-shadow: none; }
+  .stat.tint-gold  { background: var(--gold-lt);  border-color: #F0D070; box-shadow: none; }
+  .stat.tint-blue  { background: var(--blue-lt);  border-color: #C5D4EE; box-shadow: none; }
+  .stat.tint-red   { background: var(--red-lt);   border-color: #EFC5BE; box-shadow: none; }
+  .stat.tint-green .stat-label { color: #4A7A2A; }
+  .stat.tint-gold  .stat-label { color: #8F6414; }
+  .stat.tint-blue  .stat-label { color: var(--blue); }
+  .stat.tint-red   .stat-label { color: var(--red); }
   .stat.tint-total { background: #2F3237; border-color: #2F3237; }
   .stat.tint-total .stat-label { color: #C9CBCF; }
 

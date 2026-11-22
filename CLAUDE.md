@@ -21,7 +21,7 @@ Troy Morgan's client, outreach and hours tracker for Morgan Creative (his solo b
 ## Design rules (Troy cares about these)
 - Corner radius: 0.45rem on buttons and badges, 0.7rem on cards and large elements (including the floating button).
 - No emoji anywhere in the interface. Use SVG icons.
-- Stat colours: green = money, blue = active clients, gold = outreach, neutral = hours. Stat boxes are white; colour goes on the number only. Total Hours is the one dark box.
+- Stat colours: green = money, blue = active clients, gold = outreach, neutral = hours. Money, client and outreach stat boxes keep their light colour tints (Troy likes the separation); hours stat boxes are white; Total Hours is the one dark box.
 - Surfaces: page #F6F6F3, cards white with a 1px #E6E6E1 border and a faint shadow. No beige tints. Blue is for actions and links.
 - Client cards show payment progress as a 4-segment bar (`payBarHtml`) instead of an invoice badge.
 - Lean and uncluttered beats feature-rich. Ask before adding complexity.
