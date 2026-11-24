@@ -453,13 +453,7 @@
   .breakdown-label.volunteer { color: #3F6B24; }
   .breakdown-label.internal  { color: #2F7A72; }
 
-  /* Per-client hours bar (length = share of the busiest client, colour = entry type) */
   .sum-hrs { color: var(--dark); font-weight: 800; }
-  .sum-track { margin-top: 0.6rem; height: 6px; }
-  .sum-bar { display: flex; gap: 2px; height: 100%; border-radius: 99px; overflow: hidden; }
-  .sum-seg.billable  { background: var(--blue); }
-  .sum-seg.volunteer { background: #7FB069; }
-  .sum-seg.internal  { background: var(--teal); }
 
   /* Timer */
   .timer-idle { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; background: var(--white); border: 1px solid var(--border); border-radius: 0.7rem; box-shadow: var(--shadow); padding: 0.7rem 0.9rem; margin-bottom: 1.25rem; }
@@ -1325,16 +1319,12 @@ function renderHours() {
 
   const sorted=[...state.hoursLog].sort((a,b)=>a.date<b.date?1:-1);
   const withHrs=state.clients.filter(c=>clientHours(c.id)>0).sort((a,b)=>clientHours(b.id)-clientHours(a.id));
-  const maxHrs=withHrs.length?clientHours(withHrs[0].id):1;
   const summaryCards=withHrs.map(c=>{
     const hrs=clientHours(c.id), rate=c.value&&hrs>0?Number(c.value)/hrs:null;
-    const by=t=>state.hoursLog.filter(h=>h.clientId===c.id&&(h.entryType||'billable')===t).reduce((s,h)=>s+Number(h.hours),0);
-    const segs=['billable','volunteer','internal'].map(t=>{ const v=by(t); return v?`<span class="sum-seg ${t}" style="flex:${v}"></span>`:''; }).join('');
     return `<div class="summary-card">
       <div class="summary-name">${esc(c.businessName)}</div>
       ${c.contactName?`<div class="summary-detail">${esc(c.contactName)}</div>`:''}
       <div class="summary-detail"><strong class="sum-hrs">${hrs.toFixed(1)} hrs</strong>${rate?` \u00b7 \u2248 ${currency(rate)}/hr`:''}</div>
-      <div class="sum-track" aria-hidden="true"><div class="sum-bar" style="width:${Math.max(6,Math.round(hrs/maxHrs*100))}%">${segs}</div></div>
     </div>`;
   }).join('');
 
