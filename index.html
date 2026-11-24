@@ -400,6 +400,14 @@
     .info-edit-row.pair { grid-template-columns: 7.5rem 1fr auto; }
     .info-edit-row.color { grid-template-columns: auto 1fr 6.5rem auto; }
     .info-edit-row input, .info-edit-row select { font-size: 16px; }
+    .timer-bar { position: sticky; top: calc(0.5rem + env(safe-area-inset-top)); z-index: 20; }
+    .timer-elapsed { font-size: 1.4rem; }
+    .timer-actions { flex-basis: 100%; }
+    .timer-actions .btn { flex: 1; min-height: 44px; font-size: 0.9rem; }
+    .timer-actions .timer-link { flex: 0 0 auto; }
+    .timer-idle select { font-size: 16px; min-height: 44px; }
+    .timer-idle .timer-btn { min-height: 44px; flex: 1 1 100%; }
+    .breakdown-card .breakdown-val { font-size: 0.95rem; }
     .auth-card { padding: 1.5rem; }
   }
 
@@ -435,7 +443,50 @@
   .stat.tint-total .stat-label { color: #C9CBCF; }
 
   /* Hours tab breakdown: same treatment */
-  .breakdown-card.billable, .breakdown-card.volunteer, .breakdown-card.internal { background: var(--white); border: 1px solid var(--border); box-shadow: var(--shadow); }
+  /* Hours tab breakdown: colour tints to match the type pills */
+  .breakdown-card.billable  { background: var(--blue-lt);  border: 1px solid #C5D4EE; }
+  .breakdown-card.volunteer { background: var(--green-lt); border: 1px solid #C0D9B0; }
+  .breakdown-card.internal  { background: var(--teal-lt);  border: 1px solid #BFE0DB; }
+  .breakdown-card.billable .breakdown-val  { color: var(--blue); }
+  .breakdown-card.volunteer .breakdown-val { color: #3F6B24; }
+  .breakdown-card.internal .breakdown-val  { color: #2F7A72; }
+  .breakdown-label.volunteer { color: #3F6B24; }
+  .breakdown-label.internal  { color: #2F7A72; }
+
+  /* Per-client hours bar (length = share of the busiest client, colour = entry type) */
+  .sum-hrs { color: var(--dark); font-weight: 800; }
+  .sum-track { margin-top: 0.6rem; height: 6px; }
+  .sum-bar { display: flex; gap: 2px; height: 100%; border-radius: 99px; overflow: hidden; }
+  .sum-seg.billable  { background: var(--blue); }
+  .sum-seg.volunteer { background: #7FB069; }
+  .sum-seg.internal  { background: var(--teal); }
+
+  /* Timer */
+  .timer-idle { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; background: var(--white); border: 1px solid var(--border); border-radius: 0.7rem; box-shadow: var(--shadow); padding: 0.7rem 0.9rem; margin-bottom: 1.25rem; }
+  .timer-idle-title { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); margin-right: 0.25rem; }
+  .timer-idle select { flex: 1 1 200px; min-width: 0; border: 1px solid var(--border); border-radius: 0.45rem; padding: 0.45rem 0.6rem; font-size: 0.82rem; background: var(--bg); font-family: inherit; }
+  .timer-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; border-radius: 0.45rem; font-weight: 800; }
+  .timer-bar { display: flex; align-items: center; gap: 0.75rem 1.25rem; flex-wrap: wrap; border-radius: 0.7rem; padding: 0.8rem 1rem; margin-bottom: 1.25rem; }
+  .timer-bar.running { background: var(--blue); color: var(--white); box-shadow: 0 6px 18px rgba(52,87,166,0.25); }
+  .timer-bar.paused { background: var(--gold-lt); color: var(--dark); border: 1px solid #F0D070; }
+  .timer-info { display: flex; flex-direction: column; min-width: 0; flex: 1 1 180px; }
+  .timer-state { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.9; }
+  .timer-bar.paused .timer-state { color: #8F6414; }
+  .timer-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .timer-bar.running .timer-dot { animation: timerPulse 1.6s ease-in-out infinite; }
+  @keyframes timerPulse { 50% { opacity: 0.3; } }
+  .timer-client { font-size: 0.95rem; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .timer-elapsed { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .timer-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .timer-actions .btn { font-size: 0.8rem; padding: 0.45rem 0.85rem; }
+  .timer-bar.running .timer-ghost { background: rgba(255,255,255,0.16); color: var(--white); border: 1px solid rgba(255,255,255,0.45); }
+  .timer-bar.running .timer-save { background: var(--white); color: var(--blue); border: 1px solid var(--white); }
+  .timer-bar.running .timer-link { background: none; color: rgba(255,255,255,0.85); border: none; text-decoration: underline; }
+  .timer-bar.paused .timer-ghost { background: var(--white); color: var(--dark); border: 1px solid var(--border); }
+  .timer-bar.paused .timer-save { background: var(--blue); color: var(--white); border: 1px solid var(--blue); }
+  .timer-bar.paused .timer-link { background: none; color: var(--mid); border: none; text-decoration: underline; }
+  .timer-warn { flex-basis: 100%; font-size: 0.75rem; font-weight: 700; }
+  .timer-card-btn { color: var(--blue); }
 
   /* Payment progress bar on client cards */
   .pay-wrap { margin-top: 0.6rem; }
@@ -486,6 +537,8 @@ const ENTRY_TYPES = [
 ];
 
 // ── ICONS (inline SVG — evenly weighted & truly centered, unlike text glyphs) ──
+const ICON_PLAY   = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"></path></svg>`;
+const ICON_PAUSE  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z"></path></svg>`;
 const ICON_FLAG   = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`;
 const ICON_PENCIL = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`;
 const ICON_RETURN = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>`;
@@ -494,7 +547,7 @@ const ICON_EYE    = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none"
 const ICON_CLOSE  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 
 // ── STATE ────────────────────────────────────────────────────────
-const state = { clients:[], hoursLog:[], prospects:[], tab:'home', showAdd:null, showArchive:true, showInactiveProspects:true, saveStatus:'saved', detailClientId:null };
+const state = { clients:[], hoursLog:[], prospects:[], timer:null, timerSaving:false, tab:'home', showAdd:null, showArchive:true, showInactiveProspects:true, saveStatus:'saved', detailClientId:null };
 let saveTimer=null, toastTimer=null;
 
 // ── STORAGE ──────────────────────────────────────────────────────
@@ -543,8 +596,9 @@ function applyData(p) {
     dateAdded:'', businessName:'', contactName:'', email:'', referralSource:'',
     nextContactDate:'', lastContactDate:'', contactMethod:'', notes:'', contacts:[], archived:false, converted:false, ...pr,
   })).concat(prospectsFromMigration);
+  state.timer = p.timer || null;
 }
-function snapshot() { return { clients:state.clients, hoursLog:state.hoursLog, prospects:state.prospects }; }
+function snapshot() { return { clients:state.clients, hoursLog:state.hoursLog, prospects:state.prospects, timer:state.timer||null }; }
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
 
 // ── SYNC (Supabase) ──────────────────────────────────────────────
@@ -598,6 +652,8 @@ function mergeThreeWay(base, local, remote) {
     clients:   mergeList(base.clients,   local.clients,   remote.clients),
     prospects: mergeList(base.prospects, local.prospects, remote.prospects),
     hoursLog:  mergeList(base.hoursLog,  local.hoursLog,  remote.hoursLog),
+    // the timer is one value: this device's version wins only if this device changed it
+    timer: JSON.stringify(local.timer||null)!==JSON.stringify(base.timer||null) ? (local.timer||null) : (remote.timer||null),
   };
 }
 
@@ -621,7 +677,7 @@ async function saveData() {
       const remote = await fetchRemote();
       if (!remote) throw new Error('Saved data not found');
       const m = mergeThreeWay(baseSnapshot, snapshot(), remote.data||{});
-      state.clients = m.clients; state.prospects = m.prospects; state.hoursLog = m.hoursLog;
+      state.clients = m.clients; state.prospects = m.prospects; state.hoursLog = m.hoursLog; state.timer = m.timer;
       syncVersion = remote.version; baseSnapshot = clone(remote.data||{});
       merged = true;
     }
@@ -709,7 +765,7 @@ async function signOut() {
   if (dirty && !confirm('Some changes haven’t finished saving. Sign out anyway?')) return;
   await sb.auth.signOut();
   userId = null; syncVersion = null; baseSnapshot = null; dirty = false;
-  state.clients=[]; state.hoursLog=[]; state.prospects=[]; state.tab='home'; state.showAdd=null;
+  state.clients=[]; state.hoursLog=[]; state.prospects=[]; state.timer=null; state.timerSaving=false; state.tab='home'; state.showAdd=null;
   closeModal(); renderLogin();
 }
 
@@ -900,6 +956,63 @@ function copyToClipboard(text, label){
 }
 
 // ── RENDER — SHELL ───────────────────────────────────────────────
+// ── TIMER ────────────────────────────────────────────────────────
+// Stores when it started (not a ticking count), so it keeps going when the app is closed
+// and syncs between phone and Mac. Nothing is logged until you Save and submit the entry.
+const TIMER_LONG_MS = 8*3600*1000;
+function timerElapsedMs(t){ t=t||state.timer; if(!t) return 0; return (t.accumulatedMs||0) + (t.startedAt ? Math.max(0, Date.now()-t.startedAt) : 0); }
+function fmtDuration(ms){ const m=Math.floor(ms/60000), h=Math.floor(m/60); return h ? `${h}h ${String(m%60).padStart(2,'0')}m` : `${m}m`; }
+function roundQuarter(ms){ return Math.max(0.25, Math.round(ms/3600000*4)/4); }
+function timerStart(clientId){
+  if(state.timer){ showToast('A timer is already going. Save or discard it first.'); return; }
+  if(!clientId){ showToast('Pick a client to time.'); return; }
+  state.timer={ clientId, startedAt:Date.now(), accumulatedMs:0 };
+  scheduleAutoSave(); renderApp(); showToast('Timer started.');
+}
+function timerPause(){ const t=state.timer; if(!t||!t.startedAt) return; state.timer={ ...t, accumulatedMs:timerElapsedMs(t), startedAt:null }; scheduleAutoSave(); renderApp(); }
+function timerResume(){ const t=state.timer; if(!t||t.startedAt) return; state.timer={ ...t, startedAt:Date.now() }; scheduleAutoSave(); renderApp(); }
+function timerDiscard(){ if(!state.timer) return; if(!confirm('Discard this timer? The time won’t be logged.')) return; state.timer=null; state.timerSaving=false; scheduleAutoSave(); renderApp(); showToast('Timer discarded.'); }
+function timerSave(){
+  const t=state.timer; if(!t) return;
+  if(t.startedAt) state.timer={ ...t, accumulatedMs:timerElapsedMs(t), startedAt:null };   // stop the clock while you review
+  const hrs=roundQuarter(timerElapsedMs()), cl=state.clients.find(c=>c.id===state.timer.clientId);
+  state.timerSaving=true; state.tab='hours'; state.showAdd='entry'; scheduleAutoSave(); renderApp();
+  if(g('ne-client')&&cl) g('ne-client').value=cl.id;
+  if(g('ne-hours')) g('ne-hours').value=hrs;
+  if(cl && !isBillableWork(cl)){ const r=document.querySelector(`input[name="ne-type"][value="${cl.service==='Internal'?'internal':'volunteer'}"]`); if(r) r.checked=true; }
+  window.scrollTo({top:0, behavior:'smooth'});
+  showToast(`Rounded to ${hrs} hrs. Check it, then tap Log Entry.`, 4000);
+}
+function renderTimerBar(){
+  const t=state.timer;
+  if(!t){
+    if(state.tab!=='hours' || state.showAdd==='entry' || !state.clients.some(c=>!c.archived)) return '';
+    const opts=`<option value="">Choose a client…</option>`+state.clients.filter(c=>!c.archived).map(c=>`<option value="${c.id}">${esc(clientLabel(c))}</option>`).join('');
+    return `<div class="timer-idle">
+      <div class="timer-idle-title">Timer</div>
+      <select id="timer-client" aria-label="Client to time">${opts}</select>
+      <button class="btn btn-primary btn-sm timer-btn" data-action="timer-start-pick">${ICON_PLAY} Start timer</button>
+    </div>`;
+  }
+  const cl=state.clients.find(c=>c.id===t.clientId), running=!!t.startedAt, ms=timerElapsedMs(t), long=ms>TIMER_LONG_MS;
+  return `<div class="timer-bar ${running?'running':'paused'}" role="status">
+    <div class="timer-info">
+      <span class="timer-state"><span class="timer-dot" aria-hidden="true"></span>${running?'Timer running':'Paused'}</span>
+      <span class="timer-client">${esc(cl?cl.businessName:'Removed client')}</span>
+    </div>
+    <div class="timer-elapsed" data-timer-elapsed>${fmtDuration(ms)}</div>
+    <div class="timer-actions">
+      ${running?`<button class="btn timer-btn timer-ghost" data-action="timer-pause">${ICON_PAUSE} Pause</button>`
+               :`<button class="btn timer-btn timer-ghost" data-action="timer-resume">${ICON_PLAY} Resume</button>`}
+      <button class="btn timer-btn timer-save" data-action="timer-save">Save</button>
+      <button class="btn timer-btn timer-link" data-action="timer-discard">Discard</button>
+    </div>
+    ${long?`<div class="timer-warn">This has been going over 8 hours. Check the time before you save.</div>`:''}
+  </div>`;
+}
+// Refresh the elapsed time on screen without re-rendering the whole app
+setInterval(()=>{ const el=document.querySelector('[data-timer-elapsed]'); if(el&&state.timer) el.textContent=fmtDuration(timerElapsedMs()); }, 15000);
+
 function renderApp() {
   const activeClients = state.clients.filter(c=>!c.archived);
   const followUpClients = activeClients.filter(c=>c.needsFollowUp);
@@ -947,7 +1060,7 @@ function renderApp() {
         <div class="tab-action">${tabAction}</div>
       </div>
     </header>
-    <main>${state.tab==='home'?renderHome():state.tab==='outreach'?renderOutreach():renderHours()}</main>
+    <main>${renderTimerBar()}${state.tab==='home'?renderHome():state.tab==='outreach'?renderOutreach():renderHours()}</main>
     ${renderFab()}`;
   renderStatusDot();
 }
@@ -1030,6 +1143,8 @@ function renderCard(c, isArchived=false) {
   const archiveBtn = isArchived
     ? `<button class="icon-btn" data-action="unarchive-client" data-id="${c.id}" title="Restore to Active">${ICON_RETURN}</button>`
     : `<button class="icon-btn flip-icon" data-action="archive-client" data-id="${c.id}" title="Move to Past">${ICON_RETURN}</button>`;
+  const timerBtn = !isArchived && !(state.timer&&state.timer.clientId===c.id)
+    ? `<button class="icon-btn timer-card-btn" data-action="timer-start" data-id="${c.id}" title="Start timer" aria-label="Start timer for ${esc(c.businessName)}">${ICON_PLAY}</button>` : '';
   const followUpBtn = !isArchived
     ? `<button class="icon-btn followup-toggle${c.needsFollowUp?' on':''}" data-action="toggle-followup" data-id="${c.id}" title="${c.needsFollowUp?'Clear follow-up flag':'Flag for follow-up'}">${ICON_FLAG}</button>`
     : '';
@@ -1040,6 +1155,7 @@ function renderCard(c, isArchived=false) {
         ${c.contactName?`<div class="card-contact">${esc(c.contactName)}</div>`:''}
       </div>
       <span class="card-icons">
+        ${timerBtn}
         ${followUpBtn}
         <button class="icon-btn" data-action="edit-client" data-id="${c.id}">${ICON_PENCIL}</button>
         ${archiveBtn}
@@ -1208,12 +1324,17 @@ function renderHours() {
   </div>`;
 
   const sorted=[...state.hoursLog].sort((a,b)=>a.date<b.date?1:-1);
-  const summaryCards=state.clients.filter(c=>clientHours(c.id)>0).sort((a,b)=>clientHours(b.id)-clientHours(a.id)).map(c=>{
+  const withHrs=state.clients.filter(c=>clientHours(c.id)>0).sort((a,b)=>clientHours(b.id)-clientHours(a.id));
+  const maxHrs=withHrs.length?clientHours(withHrs[0].id):1;
+  const summaryCards=withHrs.map(c=>{
     const hrs=clientHours(c.id), rate=c.value&&hrs>0?Number(c.value)/hrs:null;
+    const by=t=>state.hoursLog.filter(h=>h.clientId===c.id&&(h.entryType||'billable')===t).reduce((s,h)=>s+Number(h.hours),0);
+    const segs=['billable','volunteer','internal'].map(t=>{ const v=by(t); return v?`<span class="sum-seg ${t}" style="flex:${v}"></span>`:''; }).join('');
     return `<div class="summary-card">
       <div class="summary-name">${esc(c.businessName)}</div>
       ${c.contactName?`<div class="summary-detail">${esc(c.contactName)}</div>`:''}
-      <div class="summary-detail">${hrs.toFixed(1)} hrs${rate?` \u00b7 \u2248 ${currency(rate)}/hr`:''}</div>
+      <div class="summary-detail"><strong class="sum-hrs">${hrs.toFixed(1)} hrs</strong>${rate?` \u00b7 \u2248 ${currency(rate)}/hr`:''}</div>
+      <div class="sum-track" aria-hidden="true"><div class="sum-bar" style="width:${Math.max(6,Math.round(hrs/maxHrs*100))}%">${segs}</div></div>
     </div>`;
   }).join('');
 
@@ -1823,7 +1944,13 @@ document.addEventListener('click', e=>{
     }
     case 'toggle-inactive-prospects': state.showInactiveProspects=!state.showInactiveProspects; renderApp(); break;
 
-    case 'toggle-add-entry': state.showAdd=state.showAdd==='entry'?null:'entry'; renderApp(); break;
+    case 'toggle-add-entry': state.showAdd=state.showAdd==='entry'?null:'entry'; if(!state.showAdd) state.timerSaving=false; renderApp(); break;
+    case 'timer-start': timerStart(id); break;
+    case 'timer-start-pick': timerStart(gv('timer-client')); break;
+    case 'timer-pause': timerPause(); break;
+    case 'timer-resume': timerResume(); break;
+    case 'timer-save': timerSave(); break;
+    case 'timer-discard': timerDiscard(); break;
     case 'save-new-entry': {
       const clientId=gv('ne-client'), hours=parseFloat(gv('ne-hours'));
       if(!clientId){ showToast('Please select a client.'); break; }
@@ -1832,6 +1959,7 @@ document.addEventListener('click', e=>{
         id:uid(), clientId, hours, entryType:gr('ne-type'),
         date:gv('ne-date')||today(), note:gv('ne-note'),
       });
+      if(state.timerSaving){ state.timer=null; state.timerSaving=false; }
       state.showAdd=null; scheduleAutoSave(); renderApp(); showToast('Hours logged.');
       break;
     }

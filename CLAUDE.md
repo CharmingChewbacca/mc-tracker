@@ -28,6 +28,11 @@ Troy Morgan's client, outreach and hours tracker for Morgan Creative (his solo b
 - Phone (≤700px): stats in a 2-column grid; a floating button changes with the tab (Add Client / Add Prospect / Log Hours) and replaces the static tab buttons; the hours log is compact rows with no sideways scrolling; inputs use 16px to stop iPhone zoom.
 - Visually line up icons with text edges, not with their invisible tap areas.
 
+## Timer
+- One timer at a time, stored as `state.timer` = `{clientId, startedAt (ms or null when paused), accumulatedMs}` inside the synced data, so it survives closing the app and works across phone and Mac. Merged as a single value in `mergeThreeWay`.
+- Pause/resume never logs anything. Save pauses it, rounds to the nearest 0.25 hr (min 0.25) and opens the Log Hours form prefilled; only "Log Entry" clears the timer. Cancel keeps it. Discard asks first.
+- The timer bar shows at the top of every tab (sticky on phone); start from the Hours tab or the play icon on a client card. Warns after 8 hours.
+
 ## Business logic
 - Billing: 50% deposit, then 50% final. Invoice statuses: Not Invoiced → Deposit Invoiced (id `invoiced`) → Deposit Paid → Final Invoiced → Paid in Full (id `paid`). Paid to Date counts 50% at deposit paid and 100% at paid in full.
 - Clients sort: follow-up first, then paid before volunteer, then most hours. Hours tab client cards: most hours first.
